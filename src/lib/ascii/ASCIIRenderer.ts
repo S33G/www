@@ -44,6 +44,13 @@ export class ASCIIRenderer {
   private frameInterval: number = 33; // Default ~30fps
   private currentQuality: QualityLevel = 'medium';
 
+  // Intensity tween state
+  private targetIntensity: number = 0.6;
+  private intensityTweenStart: number = 0.6;
+  private intensityTweenProgress: number = 1;
+  private intensityTweenDuration: number = 500; // ms
+  private intensityTweenStartTime: number = 0;
+
   // Transition state
   private isTransitioning: boolean = false;
   private transitionProgress: number = 0;
@@ -69,6 +76,12 @@ export class ASCIIRenderer {
 
   // Mouse trail for glitch effect
   private mouseTrail: { x: number; y: number; time: number }[] = [];
+
+  // Intro animation state
+  private introActive: boolean = true;
+  private introStartTime: number = 0;
+  private introDuration: number = 2500; // Total intro duration in ms
+  private introColumnDelays: number[] = []; // Random delay per column for staggered effect
 
   triggerExplosion(x: number, y: number): void {
      // Generate random recovery offsets for each column (for staggered cascade)
@@ -188,7 +201,69 @@ export class ASCIIRenderer {
          }
       }
 
+      // Apply intro animation alpha
+      if (this.introActive) {
+        finalAlpha *= this.getIntroAlpha(xGrid, yGrid);
+      }
+
       return { x, y, alpha: finalAlpha };
+  }
+
+  /**
+   * Calculate intro alpha for a cell based on position and time.
+   * Creates a cinematic cascade effect from top-to-bottom with per-column delays.
+   */
+  private getIntroAlpha(x: number, y: number): number {
+    if (!this.introActive) return 1;
+
+    const now = performance.now();
+    const elapsed = now - this.introStartTime;
+    
+    // Global progress (0 to 1 over intro duration)
+    const globalProgress = Math.min(elapsed / this.introDuration, 1);
+    
+    // End intro when complete
+    if (globalProgress >= 1) {
+      this.introActive = false;
+      return 1;
+    }
+
+    // Get column delay (0 to ~0.7 range from initIntroDelays)
+    const columnDelay = this.introColumnDelays[x] || 0;
+    
+    // Calculate when this column starts appearing (staggered by columnDelay)
+    // Columns with higher delay start later
+    const columnStartProgress = columnDelay * 0.5; // First 50% of time is for stagger
+    
+    // Column-specific progress (0 = hasn't started, 1 = fully revealed)
+    const columnProgress = Math.max(0, (globalProgress - columnStartProgress) / (1 - columnStartProgress));
+    
+    if (columnProgress <= 0) return 0;
+    
+    // Normalized y position (0 at top, 1 at bottom)
+    const ny = y / this.rows;
+    
+    // The "reveal wave" position for this column (0 to 1.2 to ensure full coverage)
+    const wavePosition = columnProgress * 1.3;
+    
+    // How far is this cell from the wave front?
+    const distFromWave = ny - wavePosition;
+    
+    if (distFromWave > 0.2) {
+      // Below the wave - not yet revealed
+      return 0;
+    } else if (distFromWave > 0) {
+      // Just below wave - fading in with easing
+      const fadeProgress = 1 - (distFromWave / 0.2);
+      // Cubic ease out for smooth appearance
+      return fadeProgress * fadeProgress * (3 - 2 * fadeProgress);
+    } else if (distFromWave > -0.1) {
+      // At wave front - slight brightness boost for "typing" effect
+      return 1;
+    } else {
+      // Above wave - fully revealed
+      return 1;
+    }
   }
 
   constructor(config: ASCIIRendererConfig) {
@@ -265,8 +340,22 @@ export class ASCIIRenderer {
     this.cols = Math.floor(rect.width / this.cellWidth);
     this.rows = Math.floor(rect.height / this.cellHeight);
 
+    // Initialize intro column delays for staggered cascade
+    this.initIntroDelays();
+
     // Reinitialize matrix columns
     this.initMatrixColumns();
+  }
+
+  private initIntroDelays(): void {
+    this.introColumnDelays = [];
+    for (let i = 0; i < this.cols; i++) {
+      // Create wave pattern from center outward with randomness
+      const centerX = this.cols / 2;
+      const distFromCenter = Math.abs(i - centerX) / centerX;
+      // Base delay based on distance from center + random variation
+      this.introColumnDelays[i] = distFromCenter * 0.4 + Math.random() * 0.3;
+    }
   }
 
   private initMatrixColumns(): void {
@@ -291,7 +380,16 @@ export class ASCIIRenderer {
 
   start(): void {
     this.isRunning = true;
+    this.introActive = true;
+    this.introStartTime = performance.now();
     this.animate();
+  }
+
+  /**
+   * Skip the intro animation
+   */
+  skipIntro(): void {
+    this.introActive = false;
   }
 
   /**
@@ -340,6 +438,7 @@ export class ASCIIRenderer {
 
     this.updateExplosions();
     this.updateMouseTrail();
+    this.updateIntensityTween();
     this.render();
   };
 
@@ -691,6 +790,35 @@ export class ASCIIRenderer {
 
   setIntensity(intensity: number): void {
     this.intensity = Math.max(0.1, Math.min(1, intensity));
+    this.targetIntensity = this.intensity;
+  }
+
+  /**
+   * Animate intensity change over duration
+   */
+  setIntensityAnimated(intensity: number, duration: number = 500): void {
+    const target = Math.max(0.1, Math.min(1, intensity));
+    if (target === this.intensity) return;
+
+    this.intensityTweenStart = this.intensity;
+    this.targetIntensity = target;
+    this.intensityTweenDuration = duration;
+    this.intensityTweenProgress = 0;
+    this.intensityTweenStartTime = performance.now();
+  }
+
+  /**
+   * Update intensity tween (call in animation loop)
+   */
+  private updateIntensityTween(): void {
+    if (this.intensityTweenProgress >= 1) return;
+
+    const elapsed = performance.now() - this.intensityTweenStartTime;
+    this.intensityTweenProgress = Math.min(1, elapsed / this.intensityTweenDuration);
+
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - this.intensityTweenProgress, 3);
+    this.intensity = this.intensityTweenStart + (this.targetIntensity - this.intensityTweenStart) * eased;
   }
 
   setFontSize(size: number): void {
