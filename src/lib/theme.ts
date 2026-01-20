@@ -77,7 +77,7 @@ export function initTheme(): void {
   applyTheme(theme);
 
   // Listen for system theme changes
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (getTheme() === 'system') {
       applyTheme('system');
     }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import './GlitchLogo.css';
-import { getGlyph, getGlyphs } from '../../lib/ascii/glyphs';
+import { getGlyph } from '../../lib/ascii/glyphs';
 
 const LOGO_VARIANTS = ['s33g', 'seeg', 's33g', 's33g', 'seeg'];
 const SCRAMBLE_CHARS = '0123456789@#$%&*!?<>[]{}';
@@ -323,7 +323,10 @@ export default function GlitchLogo() {
   // Console commands for browser debugging/fun
   useEffect(() => {
     // Make functions available globally
-    (window as any).s33g = {
+    interface S33GWindow extends Window {
+      s33g?: typeof s33gCommands;
+    }
+    const s33gCommands = {
       // Theme controls
       darkMode: () => {
         document.documentElement.classList.add('dark');
@@ -338,9 +341,9 @@ export default function GlitchLogo() {
       toggleTheme: () => {
         const isDark = document.documentElement.classList.contains('dark');
         if (isDark) {
-          (window as any).s33g.lightMode();
+          s33gCommands.lightMode();
         } else {
-          (window as any).s33g.darkMode();
+          s33gCommands.darkMode();
         }
       },
 
@@ -400,9 +403,11 @@ Type any command to try it out! 🚀`);
       }
     };
 
+    (window as S33GWindow).s33g = s33gCommands;
+
     // Cleanup on unmount
     return () => {
-      delete (window as any).s33g;
+      delete (window as S33GWindow).s33g;
     };
   }, [scrambleLogo, startCounting, flash3D]);
 

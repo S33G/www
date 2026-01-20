@@ -17,7 +17,6 @@ export default function SettingsPanel() {
   // Initialize with defaults to avoid hydration mismatch
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFERENCES);
   const [isOpen, setIsOpen] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
 
@@ -89,7 +88,6 @@ export default function SettingsPanel() {
     // Load preferences from localStorage after hydration
     const storedPrefs = loadPreferences();
     setPrefs(storedPrefs);
-    setIsHydrated(true);
 
     applyTheme(storedPrefs.theme);
     applyColorTheme(storedPrefs.colorTheme);
