@@ -1,5 +1,5 @@
-import { ASCII_CHARS, CHAR_SETS, type CharSetName } from './characters';
-import { type EffectType, DEFAULT_EFFECTS } from './effects';
+import { CHAR_SETS, type CharSetName } from './characters';
+import { type EffectType } from './effects';
 import {
   PerformanceMonitor,
   QUALITY_PRESETS,
