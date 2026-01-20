@@ -7,6 +7,11 @@ import { fetchRepos, getFallbackProjects, type GitHubRepo } from '@/lib/github';
 // Get project config
 const projectConfig = await getCollection('projects');
 const repoConfig = projectConfig[0]?.data?.repos || [];
+const projectPosts: Record<string, string> = {
+  'ascii-blog': '/blog/building-this-site',
+  'proj': '/blog/introducing-proj',
+  'github-fork-manager': '/blog/github-fork-manager',
+};
 
 // Try to fetch from GitHub, fallback to static data
 let projects: GitHubRepo[];
@@ -35,6 +40,7 @@ try {
         name={project.name}
         description={project.description}
         url={project.url}
+        blogUrl={projectPosts[project.name]}
         stars={project.stars}
         language={project.language}
       />
