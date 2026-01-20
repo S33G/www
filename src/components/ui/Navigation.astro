@@ -1,39 +1,12 @@
 ---
-import NavigationLogo from './NavigationLogo';
+import Navigation from './Navigation';
 
 const currentPath = Astro.url.pathname;
-
-const navLinks = [
-  { href: '/blog', label: 'Blog', title: 'Blog' },
-  { href: '/projects', label: 'Projects', title: 'Projects' },
-  { href: '/about', label: 'About', title: 'About' },
-];
 ---
 
-<nav class="navigation" aria-label="Main navigation">
-  <div class="nav-brand">
-    <a href="/" class="brand-link" aria-label="Home">
-      <NavigationLogo client:load />
-    </a>
-  </div>
+<Navigation client:load currentPath={currentPath} />
 
-  <ul class="nav-links" role="list">
-    {navLinks.map(({ href, label, title }) => (
-      <li>
-        <a
-          href={href}
-          class:list={['nav-link', { active: currentPath === href || (href !== '/' && currentPath.startsWith(href)) }]}
-          aria-current={currentPath === href ? 'page' : undefined}
-          title={title}
-        >
-          {label}
-        </a>
-      </li>
-    ))}
-  </ul>
-</nav>
-
-<style>
+<style is:global>
   .navigation {
     display: flex;
     align-items: center;
@@ -61,16 +34,16 @@ const navLinks = [
     font-family: var(--font-mono);
   }
 
-  :global(.brand-text) {
+  .brand-text {
     color: var(--color-primary);
   }
 
-  :global(.logo-char) {
+  .logo-char {
     display: inline-block;
     transition: all 0.05s ease;
   }
 
-  :global(.logo-char.glitching) {
+  .logo-char.glitching {
     animation: char-glitch 0.05s ease-out;
   }
 
@@ -130,33 +103,3 @@ const navLinks = [
     }
   }
 </style>
-
-<script>
-  // Debounce navigation clicks to prevent crashes from rapid clicking
-  let isNavigating = false;
-  const DEBOUNCE_MS = 300;
-
-  function setupNavDebounce() {
-    const navLinks = document.querySelectorAll('.navigation a');
-    
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        if (isNavigating) {
-          e.preventDefault();
-          return;
-        }
-        
-        isNavigating = true;
-        setTimeout(() => {
-          isNavigating = false;
-        }, DEBOUNCE_MS);
-      });
-    });
-  }
-
-  // Setup on initial load
-  setupNavDebounce();
-
-  // Re-setup after Astro page transitions
-  document.addEventListener('astro:after-swap', setupNavDebounce);
-</script>
