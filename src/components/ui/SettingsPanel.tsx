@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef, useTransition } from 'react';
 import {
   loadPreferences,
   savePreferences,
@@ -17,12 +17,14 @@ export default function SettingsPanel() {
   // Initialize with defaults to avoid hydration mismatch
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFERENCES);
   const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
 
   const cycleIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const dispatchEffectChange = useCallback((p: Preferences) => {
+  // React 19: No need for useCallback - compiler optimizes these
+  const dispatchEffectChange = (p: Preferences) => {
     window.dispatchEvent(new CustomEvent('ascii-settings-change', {
       detail: {
         effect: p.effect,
@@ -31,16 +33,16 @@ export default function SettingsPanel() {
         color: COLOR_THEMES[p.colorTheme].primary,
       }
     }));
-  }, []);
+  };
 
-  const stopAutoCycle = useCallback(() => {
+  const stopAutoCycle = () => {
     if (cycleIntervalRef.current) {
       clearTimeout(cycleIntervalRef.current);
       cycleIntervalRef.current = null;
     }
-  }, []);
+  };
 
-  const startAutoCycle = useCallback(() => {
+  const startAutoCycle = () => {
     stopAutoCycle();
 
     const scheduleNextCycle = () => {
@@ -50,36 +52,39 @@ export default function SettingsPanel() {
         const currentPrefs = prefsRef.current;
         const currentIdx = effects.indexOf(currentPrefs.effect);
         const nextIdx = (currentIdx + 1) % effects.length;
-        updatePreferenceRef.current('effect', effects[nextIdx]);
+        updatePreference('effect', effects[nextIdx]);
         scheduleNextCycle();
       }, randomDelay);
     };
 
     scheduleNextCycle();
-  }, [stopAutoCycle]);
+  };
 
-  const updatePreference = useCallback(<K extends keyof Preferences>(
+  const updatePreference = <K extends keyof Preferences>(
     key: K,
     value: Preferences[K]
   ) => {
-    const updated = savePreferences({ [key]: value });
-    setPrefs(updated);
+    // Use transition for non-urgent state updates
+    startTransition(() => {
+      const updated = savePreferences({ [key]: value });
+      setPrefs(updated);
 
-    if (key === 'theme') {
-      applyTheme(value as Theme);
-    } else if (key === 'colorTheme') {
-      applyColorTheme(value as ColorTheme);
-      dispatchEffectChange(updated);
-    } else if (key === 'autoCycle') {
-      if (value) {
-        startAutoCycle();
+      if (key === 'theme') {
+        applyTheme(value as Theme);
+      } else if (key === 'colorTheme') {
+        applyColorTheme(value as ColorTheme);
+        dispatchEffectChange(updated);
+      } else if (key === 'autoCycle') {
+        if (value) {
+          startAutoCycle();
+        } else {
+          stopAutoCycle();
+        }
       } else {
-        stopAutoCycle();
+        dispatchEffectChange(updated);
       }
-    } else {
-      dispatchEffectChange(updated);
-    }
-  }, [dispatchEffectChange, startAutoCycle, stopAutoCycle]);
+    });
+  };
 
   const updatePreferenceRef = useRef(updatePreference);
   updatePreferenceRef.current = updatePreference;
