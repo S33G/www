@@ -7,7 +7,7 @@ const _g = (h: string) => {
     const unreversed = h.split('').reverse().join('');
     // Convert hex pairs to characters
     const chars = unreversed.match(/../g)?.map(x => String.fromCharCode(parseInt(x, 16))).join('') || '';
-    
+
     // If it looks like base64 (contains base64 chars and/or ends with =), decode it
     if (/^[A-Za-z0-9+/]+=*$/.test(chars)) {
       try {
@@ -17,7 +17,7 @@ const _g = (h: string) => {
         return chars;
       }
     }
-    
+
     return chars;
   } catch { return ''; }
 };

@@ -19,28 +19,28 @@ export interface QualitySettings {
 
 export const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
   low: {
-    cellSize: 16,
+    cellSize: 20,
     effectsEnabled: false,
-    maxParticles: 50,
-    updateInterval: 50,
+    maxParticles: 25,
+    updateInterval: 66, // ~15fps
   },
   medium: {
+    cellSize: 16,
+    effectsEnabled: true,
+    maxParticles: 50,
+    updateInterval: 50, // ~20fps
+  },
+  high: {
     cellSize: 12,
     effectsEnabled: true,
     maxParticles: 100,
-    updateInterval: 33,
+    updateInterval: 33, // ~30fps
   },
-  high: {
+  ultra: {
     cellSize: 10,
     effectsEnabled: true,
     maxParticles: 200,
-    updateInterval: 16,
-  },
-  ultra: {
-    cellSize: 8,
-    effectsEnabled: true,
-    maxParticles: 500,
-    updateInterval: 16,
+    updateInterval: 16, // ~60fps
   },
 };
 
@@ -50,7 +50,8 @@ export class PerformanceMonitor {
   private fps = 60;
   private frameTimeHistory: number[] = [];
   private readonly historySize = 30;
-  private currentQuality: QualityLevel = 'high';
+  private currentQuality: QualityLevel = 'medium';
+  private qualityLocked: boolean = false;
 
   /**
    * Call this every frame to update metrics
@@ -82,17 +83,34 @@ export class PerformanceMonitor {
    * Check performance and suggest quality adjustment
    */
   checkAndAdapt(): QualityLevel {
-    if (this.frameTimeHistory.length < this.historySize) {
+    if (this.qualityLocked || this.frameTimeHistory.length < this.historySize) {
       return this.currentQuality;
     }
 
-    if (this.fps < 25 && this.currentQuality !== 'low') {
+    // More aggressive downgrade threshold
+    if (this.fps < 30 && this.currentQuality !== 'low') {
       this.currentQuality = this.decreaseQuality(this.currentQuality);
-    } else if (this.fps > 55 && this.currentQuality !== 'ultra') {
+    } else if (this.fps > 58 && this.currentQuality !== 'ultra') {
+      // Only upgrade if consistently hitting 58+ fps
       this.currentQuality = this.increaseQuality(this.currentQuality);
     }
 
     return this.currentQuality;
+  }
+
+  /**
+   * Lock quality to prevent auto-adjustment
+   */
+  lockQuality(quality: QualityLevel): void {
+    this.currentQuality = quality;
+    this.qualityLocked = true;
+  }
+
+  /**
+   * Unlock quality for auto-adjustment
+   */
+  unlockQuality(): void {
+    this.qualityLocked = false;
   }
 
   private decreaseQuality(current: QualityLevel): QualityLevel {
@@ -114,7 +132,8 @@ export class PerformanceMonitor {
   reset(): void {
     this.frameCount = 0;
     this.frameTimeHistory = [];
-    this.currentQuality = 'high';
+    this.currentQuality = 'medium';
+    this.qualityLocked = false;
   }
 }
 
@@ -132,4 +151,52 @@ export function prefersReducedMotion(): boolean {
 export function isPageVisible(): boolean {
   if (typeof document === 'undefined') return true;
   return !document.hidden;
+}
+
+/**
+ * Detect if running on ARM architecture (mobile, Apple Silicon, etc.)
+ */
+export function isArmDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+
+  const ua = navigator.userAgent.toLowerCase();
+  const platform = (navigator.platform || '').toLowerCase();
+
+  // Check for ARM indicators
+  const isArm =
+    ua.includes('arm') ||
+    ua.includes('aarch64') ||
+    platform.includes('arm') ||
+    // Apple Silicon Macs report as MacIntel but we can detect via other means
+    (platform === 'macintel' && navigator.maxTouchPoints > 0) ||
+    // Mobile devices (mostly ARM)
+    /android|iphone|ipad|ipod/i.test(ua);
+
+  return isArm;
+}
+
+/**
+ * Detect if on battery power (if API available)
+ */
+export async function isOnBattery(): Promise<boolean> {
+  if (typeof navigator === 'undefined' || !('getBattery' in navigator)) {
+    return false;
+  }
+
+  try {
+    // @ts-expect-error Battery API not in all TS definitions
+    const battery = await navigator.getBattery();
+    return !battery.charging;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get recommended initial quality based on device
+ */
+export function getRecommendedQuality(): QualityLevel {
+  if (prefersReducedMotion()) return 'low';
+  if (isArmDevice()) return 'low';
+  return 'medium';
 }

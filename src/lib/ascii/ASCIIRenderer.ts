@@ -5,6 +5,8 @@ import {
   QUALITY_PRESETS,
   prefersReducedMotion,
   isPageVisible,
+  getRecommendedQuality,
+  type QualityLevel,
 } from './performance';
 
 export interface ASCIIRendererConfig {
@@ -39,6 +41,9 @@ export class ASCIIRenderer {
   private mouseX: number = 0;
   private mouseY: number = 0;
   private isRunning: boolean = false;
+  private lastFrameTime: number = 0;
+  private frameInterval: number = 33; // Default ~30fps
+  private currentQuality: QualityLevel = 'medium';
 
   // Transition state
   private isTransitioning: boolean = false;
@@ -198,6 +203,10 @@ export class ASCIIRenderer {
     this.intensity = config.intensity || 0.6;
     this.performanceMonitor = new PerformanceMonitor();
 
+    // Set initial quality based on device
+    this.currentQuality = getRecommendedQuality();
+    this.frameInterval = QUALITY_PRESETS[this.currentQuality].updateInterval;
+
     // Create canvas
     this.canvas = document.createElement('canvas');
     this.canvas.style.position = 'absolute';
@@ -306,17 +315,31 @@ export class ASCIIRenderer {
   private animate = (): void => {
     if (!this.isRunning) return;
 
+    this.animationId = requestAnimationFrame(this.animate);
+
+    // Frame throttling - skip frames if too fast
+    const now = performance.now();
+    const elapsed = now - this.lastFrameTime;
+
+    if (elapsed < this.frameInterval) {
+      return;
+    }
+    this.lastFrameTime = now - (elapsed % this.frameInterval);
+
     this.performanceMonitor.tick();
     const quality = this.performanceMonitor.checkAndAdapt();
-    const settings = QUALITY_PRESETS[quality];
 
-    this.time += 0.016 * this.speed * settings.updateInterval / 16;
+    // Update frame interval if quality changed
+    if (quality !== this.currentQuality) {
+      this.currentQuality = quality;
+      this.frameInterval = QUALITY_PRESETS[quality].updateInterval;
+    }
+
+    this.time += 0.016 * this.speed;
 
     this.updateExplosions();
     this.updateMouseTrail();
     this.render();
-
-    this.animationId = requestAnimationFrame(this.animate);
   };
 
   private render(): void {
@@ -335,7 +358,12 @@ export class ASCIIRenderer {
     this.ctx.fillStyle = this.backgroundColor;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    this.ctx.font = `${this.fontSize}px monospace`;
+    // Use larger font at low quality for fewer cells
+    const effectiveFontSize = this.currentQuality === 'low'
+      ? Math.max(this.fontSize, 18)
+      : this.fontSize;
+
+    this.ctx.font = `${effectiveFontSize}px monospace`;
     this.ctx.textBaseline = 'top';
 
     if (this.isTransitioning && this.oldEffect) {
@@ -453,17 +481,21 @@ export class ASCIIRenderer {
 
   private renderWave(): void {
     const rgb = this.hexToRgb(this.color);
+    // Skip cells at low quality for better performance
+    const skip = this.currentQuality === 'low' ? 2 : 1;
 
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.cols; x++) {
+    for (let y = 0; y < this.rows; y += skip) {
+      for (let x = 0; x < this.cols; x += skip) {
         // Distance from mouse
         const dx = x / this.cols - this.mouseX;
         const dy = y / this.rows - this.mouseY;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
-        // Wave effect
+        // Wave effect - simplified at low quality
         const wave = Math.sin(x * 0.1 + this.time) * Math.cos(y * 0.1 + this.time);
-        const ripple = Math.sin(dist * 10 - this.time * 2) * Math.exp(-dist * 3);
+        const ripple = this.currentQuality === 'low'
+          ? 0 // Skip expensive ripple at low quality
+          : Math.sin(dist * 10 - this.time * 2) * Math.exp(-dist * 3);
         const value = (wave + ripple + 1) / 2;
 
         // Map to character
@@ -485,13 +517,16 @@ export class ASCIIRenderer {
   private renderPulse(): void {
     const rgb = this.hexToRgb(this.color);
     const pulse = (Math.sin(this.time * 2) + 1) / 2;
+    const skip = this.currentQuality === 'low' ? 2 : 1;
 
-    for (let y = 0; y < this.rows; y++) {
-      for (let x = 0; x < this.cols; x++) {
-        const cx = this.cols / 2;
-        const cy = this.rows / 2;
+    // Pre-calculate center values
+    const cx = this.cols / 2;
+    const cy = this.rows / 2;
+    const maxDist = Math.sqrt(cx ** 2 + cy ** 2);
+
+    for (let y = 0; y < this.rows; y += skip) {
+      for (let x = 0; x < this.cols; x += skip) {
         const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-        const maxDist = Math.sqrt(cx ** 2 + cy ** 2);
         const normDist = dist / maxDist;
 
         const ring = Math.sin(normDist * 10 - this.time * 3);
@@ -525,53 +560,53 @@ export class ASCIIRenderer {
 
   private renderGlitch(): void {
     const rgb = this.hexToRgb(this.color);
-
-    // Base layer: calm wave pattern (like renderWave but subtler)
-    // Occasional glitch "events" that are localized and dramatic
+    const skip = this.currentQuality === 'low' ? 2 : 1;
+    const isLowQuality = this.currentQuality === 'low';
 
     // Glitch state - persists across frames for coherence
-    const glitchTime = this.time * 0.5; // Slower time for glitch calc
+    const glitchTime = this.time * 0.5;
 
     // Scanline interference - a band that slowly moves down the screen
-    const scanlineY = ((glitchTime * 0.3) % 1.4) - 0.2; // -0.2 to 1.2, wraps
+    const scanlineY = ((glitchTime * 0.3) % 1.4) - 0.2;
     const scanlineWidth = 0.08;
 
-    // Rare "burst" glitch - dramatic but infrequent
-    const burstChance = Math.sin(glitchTime * 0.7) > 0.97;
+    // Rare "burst" glitch - disable at low quality
+    const burstChance = !isLowQuality && Math.sin(glitchTime * 0.7) > 0.97;
     const burstIntensity = burstChance ? (Math.sin(glitchTime * 50) + 1) * 0.5 : 0;
 
-    for (let y = 0; y < this.rows; y++) {
+    // Pre-calculate mouse trail info for low quality (skip trail at low quality)
+    const now = isLowQuality ? 0 : Date.now();
+
+    for (let y = 0; y < this.rows; y += skip) {
       const ny = y / this.rows;
 
       // Check if this row is in the scanline band
       const inScanline = Math.abs(ny - scanlineY) < scanlineWidth;
       const scanlineStrength = inScanline ? 1 - Math.abs(ny - scanlineY) / scanlineWidth : 0;
 
-      // Horizontal offset for scanline rows (screen tear effect)
-      const rowOffset = inScanline ? Math.sin(y * 0.5 + this.time * 10) * scanlineStrength * 3 : 0;
+      // Horizontal offset for scanline rows - simplified at low quality
+      const rowOffset = inScanline && !isLowQuality
+        ? Math.sin(y * 0.5 + this.time * 10) * scanlineStrength * 3
+        : 0;
 
-      for (let x = 0; x < this.cols; x++) {
+      for (let x = 0; x < this.cols; x += skip) {
         const nx = x / this.cols;
 
-        // Base pattern: gentle noise field that shifts slowly
+        // Simplified pattern at low quality
         const noise1 = Math.sin(x * 0.15 + this.time * 0.5) * Math.cos(y * 0.12 + this.time * 0.3);
-        const noise2 = Math.sin((x + y) * 0.08 + this.time * 0.2);
-        const baseValue = (noise1 + noise2 + 2) / 4; // 0-1 range
+        const baseValue = isLowQuality
+          ? (noise1 + 1) / 2
+          : (noise1 + Math.sin((x + y) * 0.08 + this.time * 0.2) + 2) / 4;
 
-        // Character selection - mostly consistent, occasional swaps
-        const charNoise = Math.sin(x * 0.3 + y * 0.2 + this.time * 0.1);
-        const charIndex = Math.floor((baseValue + charNoise * 0.2) * (this.charSet.length - 1));
+        const charIndex = Math.floor(baseValue * (this.charSet.length - 1));
         const char = this.charSet[Math.max(0, Math.min(charIndex, this.charSet.length - 1))];
 
-        // Alpha: base layer is subtle
         let alpha = (0.15 + baseValue * 0.25) * this.intensity;
 
-        // Scanline brightens characters
         if (inScanline) {
           alpha += scanlineStrength * 0.4 * this.intensity;
         }
 
-        // Burst effect: random bright spots
         if (burstIntensity > 0 && Math.random() < burstIntensity * 0.3) {
           alpha = Math.min(1, alpha + burstIntensity * 0.5);
         }
@@ -580,41 +615,39 @@ export class ASCIIRenderer {
 
         if (finalAlpha <= 0.01) continue;
 
-        // Color: slight chromatic aberration in scanline
         let r = rgb.r, g = rgb.g, b = rgb.b;
-        if (inScanline) {
-          // Subtle RGB split
+        if (inScanline && !isLowQuality) {
           const aberration = scanlineStrength * 20;
           r = Math.min(255, rgb.r + aberration);
           b = Math.max(0, rgb.b - aberration);
         }
 
-        // Mouse proximity check for inversion effect
-        const mouseDist = Math.sqrt((nx - this.mouseX) ** 2 + (ny - this.mouseY) ** 2);
-        const mouseRadius = 0.08;
+        // Mouse proximity - simplified at low quality
         let isInverted = false;
         let trailBoost = 0;
 
-        // Check if near current mouse position
-        if (mouseDist < mouseRadius) {
-          isInverted = true;
-          trailBoost = (1 - mouseDist / mouseRadius) * 0.6;
-        }
+        if (!isLowQuality) {
+          const mouseDist = Math.sqrt((nx - this.mouseX) ** 2 + (ny - this.mouseY) ** 2);
+          const mouseRadius = 0.08;
 
-        // Check mouse trail for lingering inversion
-        const now = Date.now();
-        for (const point of this.mouseTrail) {
-          const trailDist = Math.sqrt((nx - point.x) ** 2 + (ny - point.y) ** 2);
-          const age = (now - point.time) / 1500; // 0 to 1 over 1.5s
-          const trailRadius = mouseRadius * (1 - age * 0.5); // Shrinks over time
-          if (trailDist < trailRadius) {
-            const strength = (1 - trailDist / trailRadius) * (1 - age);
-            if (strength > 0.3) isInverted = true;
-            trailBoost = Math.max(trailBoost, strength * 0.4);
+          if (mouseDist < mouseRadius) {
+            isInverted = true;
+            trailBoost = (1 - mouseDist / mouseRadius) * 0.6;
+          }
+
+          // Check mouse trail
+          for (const point of this.mouseTrail) {
+            const trailDist = Math.sqrt((nx - point.x) ** 2 + (ny - point.y) ** 2);
+            const age = (now - point.time) / 1500;
+            const trailRadius = mouseRadius * (1 - age * 0.5);
+            if (trailDist < trailRadius) {
+              const strength = (1 - trailDist / trailRadius) * (1 - age);
+              if (strength > 0.3) isInverted = true;
+              trailBoost = Math.max(trailBoost, strength * 0.4);
+            }
           }
         }
 
-        // Apply inversion
         if (isInverted) {
           r = 255 - r;
           g = 255 - g;
