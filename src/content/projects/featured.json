@@ -11,6 +11,12 @@
       "name": "proj",
       "featured": true,
       "description": "A fast TUI project navigator to browse and run actions across local code folders"
+    },
+    {
+      "owner": "s33g",
+      "name": "github-fork-manager",
+      "featured": true,
+      "description": "A terminal-first tool for cleaning up forks safely at scale"
     }
   ]
 }
