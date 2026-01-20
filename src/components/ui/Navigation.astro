@@ -130,3 +130,33 @@ const navLinks = [
     }
   }
 </style>
+
+<script>
+  // Debounce navigation clicks to prevent crashes from rapid clicking
+  let isNavigating = false;
+  const DEBOUNCE_MS = 300;
+
+  function setupNavDebounce() {
+    const navLinks = document.querySelectorAll('.navigation a');
+    
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        if (isNavigating) {
+          e.preventDefault();
+          return;
+        }
+        
+        isNavigating = true;
+        setTimeout(() => {
+          isNavigating = false;
+        }, DEBOUNCE_MS);
+      });
+    });
+  }
+
+  // Setup on initial load
+  setupNavDebounce();
+
+  // Re-setup after Astro page transitions
+  document.addEventListener('astro:after-swap', setupNavDebounce);
+</script>
