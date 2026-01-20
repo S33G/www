@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface LogoChar {
   char: string;
@@ -18,8 +18,8 @@ export default function NavigationLogo() {
   const glitchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
 
-  // Animate glitch effect
-  const triggerGlitch = useCallback((newVariant: 'seeg' | 's33g') => {
+  // React 19: No useCallback needed - compiler handles optimization
+  const triggerGlitch = (newVariant: 'seeg' | 's33g') => {
     if (!isMountedRef.current) return;
 
     const targetChars = newVariant.split('');
@@ -63,10 +63,16 @@ export default function NavigationLogo() {
     };
 
     glitchStep();
-  }, []);
+  };
+
+  // Store triggerGlitch in ref for stable access in effect
+  const triggerGlitchRef = useRef(triggerGlitch);
+  triggerGlitchRef.current = triggerGlitch;
 
   // Cycle between variants every 5 seconds
   useEffect(() => {
+    isMountedRef.current = true;
+
     const nextVariant = (current: 'seeg' | 's33g'): 'seeg' | 's33g' => {
       return current === 'seeg' ? 's33g' : 'seeg';
     };
@@ -77,7 +83,7 @@ export default function NavigationLogo() {
       setLogoChars(prev => {
         const currentString = prev.map(c => c.char).join('') as 'seeg' | 's33g';
         const newVariant = nextVariant(currentString);
-        triggerGlitch(newVariant);
+        triggerGlitchRef.current(newVariant);
         return prev;
       });
 
@@ -90,12 +96,6 @@ export default function NavigationLogo() {
       isMountedRef.current = false;
       if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
       if (glitchTimeoutRef.current) clearTimeout(glitchTimeoutRef.current);
-    };
-  }, [triggerGlitch]);
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false;
     };
   }, []);
 
