@@ -5,11 +5,9 @@ interface LogoChar {
   isGlitching: boolean;
 }
 
-const VARIANTS = ['seeg', 's33g'];
 const GLITCH_CHARS = '0123456789@#$%&*!?';
 
 export default function NavigationLogo() {
-  const [variant, setVariant] = useState<'seeg' | 's33g'>('seeg');
   const [logoChars, setLogoChars] = useState<LogoChar[]>([
     { char: 's', isGlitching: false },
     { char: 'e', isGlitching: false },
@@ -29,14 +27,14 @@ export default function NavigationLogo() {
     const glitchStep = () => {
       // Randomly glitch some characters
       setLogoChars(prev =>
-        prev.map((char, i) => {
+        prev.map(() => {
           if (Math.random() < 0.5) {
             return {
               char: GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
               isGlitching: true,
             };
           }
-          return char;
+          return;
         })
       );
 
@@ -48,7 +46,6 @@ export default function NavigationLogo() {
         );
       } else {
         // Finish with the new variant
-        setVariant(newVariant);
         setLogoChars(
           targetChars.map(char => ({
             char,
@@ -63,13 +60,14 @@ export default function NavigationLogo() {
 
   // Cycle between variants every 5 seconds
   useEffect(() => {
-    const cycle = () => {
-      setVariant(prev => {
-        const newVariant = prev === 'seeg' ? 's33g' : 'seeg';
-        triggerGlitch(newVariant);
-        return prev; // Return old variant, will update in triggerGlitch
-      });
+    const nextVariant = (current: 'seeg' | 's33g'): 'seeg' | 's33g' => {
+      return current === 'seeg' ? 's33g' : 'seeg';
+    };
 
+    const cycle = () => {
+      const currentChars = logoChars.map(c => c.char).join('') as 'seeg' | 's33g';
+      const newVariant = nextVariant(currentChars);
+      triggerGlitch(newVariant);
       cycleTimeoutRef.current = setTimeout(cycle, 5000);
     };
 
