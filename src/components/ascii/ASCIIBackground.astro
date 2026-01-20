@@ -22,6 +22,24 @@ const { effect = 'wave' } = Astro.props;
   import { ASCIIRenderer, type EffectType } from '@/lib/ascii';
   import { loadPreferences, COLOR_THEMES } from '@/lib/preferences';
 
+  // Intensity settings for different page types
+  const HOME_INTENSITY = 0.8;
+  const CONTENT_INTENSITY = 0.5;
+  const REDUCED_MOTION_INTENSITY = 0.25;
+  const TWEEN_DURATION = 600; // ms
+
+  function isHomePage(): boolean {
+    return window.location.pathname === '/' || window.location.pathname === '';
+  }
+
+  function getPageIntensity(reducedMotion: boolean): number {
+    if (reducedMotion) return REDUCED_MOTION_INTENSITY;
+    return isHomePage() ? HOME_INTENSITY : CONTENT_INTENSITY;
+  }
+
+  let renderer: ASCIIRenderer | null = null;
+  let reducedMotion = false;
+
   function initASCII() {
     const container = document.getElementById('ascii-background');
     if (!container) return;
@@ -31,21 +49,22 @@ const { effect = 'wave' } = Astro.props;
     const effect = prefs.effect || (container.dataset.effect as EffectType) || 'wave';
     const colorTheme = COLOR_THEMES[prefs.colorTheme] || COLOR_THEMES.green;
 
-    // Check for reduced motion preference - still render but static
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    
+    // Check for reduced motion preference
+    reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // Detect mobile for performance adjustments
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    let renderer: ASCIIRenderer | null = null;
+    // Calculate initial intensity based on page and motion preference
+    const initialIntensity = getPageIntensity(reducedMotion);
 
     try {
       renderer = new ASCIIRenderer({
         container,
         effect,
-        fontSize: isMobile ? 16 : 14, // Larger font on mobile = fewer cells
-        speed: prefs.speed || 1,
-        intensity: prefs.intensity || 0.6,
+        fontSize: isMobile ? 16 : 14,
+        speed: reducedMotion ? 0.3 : (prefs.speed || 1), // Slow down for reduced motion
+        intensity: initialIntensity,
         color: colorTheme.primary,
         backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#0f0f0f',
       });
@@ -105,11 +124,43 @@ const { effect = 'wave' } = Astro.props;
     }, { once: true });
   }
 
+  // Handle intensity transition on page navigation (Astro View Transitions)
+  function handlePageTransition() {
+    if (!renderer || reducedMotion) return;
+
+    const newIntensity = getPageIntensity(reducedMotion);
+    renderer.setIntensityAnimated(newIntensity, TWEEN_DURATION);
+  }
+
   // Initialize
   initASCII();
 
   // Re-initialize on Astro page transitions
-  document.addEventListener('astro:after-swap', initASCII);
+  document.addEventListener('astro:after-swap', () => {
+    // If renderer still exists (persisted), just tween intensity
+    if (renderer && !reducedMotion) {
+      handlePageTransition();
+    } else {
+      initASCII();
+    }
+  });
+
+  // Listen for reduced motion preference changes
+  window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+    reducedMotion = e.matches;
+    if (renderer) {
+      const container = document.getElementById('ascii-background');
+      if (reducedMotion) {
+        renderer.setSpeed(0.3);
+        renderer.setIntensityAnimated(REDUCED_MOTION_INTENSITY, TWEEN_DURATION);
+        if (container) container.style.opacity = '0.3';
+      } else {
+        renderer.setSpeed(1);
+        renderer.setIntensityAnimated(getPageIntensity(false), TWEEN_DURATION);
+        if (container) container.style.opacity = '';
+      }
+    }
+  });
 </script>
 
 <style>
