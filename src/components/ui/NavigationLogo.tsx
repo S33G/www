@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface LogoChar {
   char: string;
@@ -16,15 +16,20 @@ export default function NavigationLogo() {
   ]);
   const cycleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const glitchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true);
 
   // Animate glitch effect
-  const triggerGlitch = (newVariant: 'seeg' | 's33g') => {
+  const triggerGlitch = useCallback((newVariant: 'seeg' | 's33g') => {
+    if (!isMountedRef.current) return;
+
     const targetChars = newVariant.split('');
     const glitchDuration = 300; // ms
     const glitchSteps = 8;
     let stepCount = 0;
 
     const glitchStep = () => {
+      if (!isMountedRef.current) return;
+
       // Randomly glitch some characters
       setLogoChars(prev =>
         prev.map(char => {
@@ -46,17 +51,19 @@ export default function NavigationLogo() {
         );
       } else {
         // Finish with the new variant
-        setLogoChars(
-          targetChars.map(char => ({
-            char,
-            isGlitching: false,
-          }))
-        );
+        if (isMountedRef.current) {
+          setLogoChars(
+            targetChars.map(char => ({
+              char,
+              isGlitching: false,
+            }))
+          );
+        }
       }
     };
 
     glitchStep();
-  };
+  }, []);
 
   // Cycle between variants every 5 seconds
   useEffect(() => {
@@ -65,17 +72,30 @@ export default function NavigationLogo() {
     };
 
     const cycle = () => {
-      const currentChars = logoChars.map(c => c.char).join('') as 'seeg' | 's33g';
-      const newVariant = nextVariant(currentChars);
-      triggerGlitch(newVariant);
+      if (!isMountedRef.current) return;
+
+      setLogoChars(prev => {
+        const currentString = prev.map(c => c.char).join('') as 'seeg' | 's33g';
+        const newVariant = nextVariant(currentString);
+        triggerGlitch(newVariant);
+        return prev;
+      });
+
       cycleTimeoutRef.current = setTimeout(cycle, 5000);
     };
 
     cycleTimeoutRef.current = setTimeout(cycle, 5000);
 
     return () => {
+      isMountedRef.current = false;
       if (cycleTimeoutRef.current) clearTimeout(cycleTimeoutRef.current);
       if (glitchTimeoutRef.current) clearTimeout(glitchTimeoutRef.current);
+    };
+  }, [triggerGlitch]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
     };
   }, []);
 
@@ -83,7 +103,7 @@ export default function NavigationLogo() {
     <span className="brand-text">
       {logoChars.map((item, i) => (
         <span
-          key={i}
+          key={`${i}-${item.char}`}
           className={`logo-char ${item.isGlitching ? 'glitching' : ''}`}
           style={{
             display: 'inline-block',
