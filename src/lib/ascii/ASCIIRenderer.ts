@@ -3,7 +3,6 @@ import { type EffectType } from './effects';
 import {
   PerformanceMonitor,
   QUALITY_PRESETS,
-  prefersReducedMotion,
   isPageVisible,
   getRecommendedQuality,
   type QualityLevel,
