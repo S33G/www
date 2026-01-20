@@ -1,0 +1,77 @@
+---
+---
+
+<button
+  class="theme-toggle"
+  type="button"
+  aria-label="Toggle theme"
+  title="Toggle dark/light theme"
+>
+  <span class="theme-icon theme-icon--dark" aria-hidden="true">☾</span>
+  <span class="theme-icon theme-icon--light" aria-hidden="true">☀</span>
+</button>
+
+<script>
+  function initThemeToggle() {
+    const button = document.querySelector('.theme-toggle');
+    if (!button) return;
+
+    button.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+  }
+
+  // Run on initial load
+  initThemeToggle();
+
+  // Re-run on Astro page transitions
+  document.addEventListener('astro:after-swap', initThemeToggle);
+</script>
+
+<style>
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--text-muted);
+    border-radius: var(--console-radius);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .theme-toggle:hover,
+  .theme-toggle:focus {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .theme-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .theme-icon {
+    font-size: 1rem;
+  }
+
+  .theme-icon--light {
+    display: none;
+  }
+
+  :global([data-theme='light']) .theme-icon--dark {
+    display: none;
+  }
+
+  :global([data-theme='light']) .theme-icon--light {
+    display: block;
+  }
+</style>

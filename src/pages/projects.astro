@@ -1,0 +1,87 @@
+---
+import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
+import ProjectCard from '@/components/content/ProjectCard.astro';
+import { getCollection } from 'astro:content';
+import { fetchRepos, getFallbackProjects, type GitHubRepo } from '@/lib/github';
+
+// Get project config
+const projectConfig = await getCollection('projects');
+const repoConfig = projectConfig[0]?.data?.repos || [];
+
+// Try to fetch from GitHub, fallback to static data
+let projects: GitHubRepo[];
+
+try {
+  projects = await fetchRepos(repoConfig);
+
+  // If GitHub API failed, use fallback
+  if (projects.length === 0) {
+    projects = getFallbackProjects(repoConfig);
+  }
+} catch {
+  projects = getFallbackProjects(repoConfig);
+}
+---
+
+<ConsoleLayout title="Projects" description="Open source projects and experiments">
+  <div class="projects-header">
+    <h1>Projects</h1>
+    <p class="project-count">{projects.length} project{projects.length !== 1 ? 's' : ''}</p>
+  </div>
+
+  <div class="projects-grid">
+    {projects.map((project) => (
+      <ProjectCard
+        name={project.name}
+        description={project.description}
+        url={project.url}
+        stars={project.stars}
+        language={project.language}
+      />
+    ))}
+  </div>
+
+  {projects.length === 0 && (
+    <p class="no-projects">No projects to display.</p>
+  )}
+</ConsoleLayout>
+
+<style>
+  .projects-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .projects-header h1 {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+  }
+
+  .project-count {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0;
+  }
+
+  .projects-grid {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  @media (min-width: 640px) {
+    .projects-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .no-projects {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--space-xl);
+  }
+</style>

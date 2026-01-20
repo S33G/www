@@ -1,0 +1,65 @@
+---
+import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
+import PostCard from '@/components/content/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<ConsoleLayout title="Blog" description="All blog posts">
+  <div class="blog-header">
+    <h1>Blog</h1>
+    <p class="blog-count">{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
+  </div>
+
+  <div class="posts-grid">
+    {posts.map((post) => (
+      <PostCard
+        slug={post.slug}
+        title={post.data.title}
+        description={post.data.description}
+        pubDate={post.data.pubDate}
+        tags={post.data.tags}
+      />
+    ))}
+  </div>
+
+  {posts.length === 0 && (
+    <p class="no-posts">No posts yet. Check back soon!</p>
+  )}
+</ConsoleLayout>
+
+<style>
+  .blog-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .blog-header h1 {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+  }
+
+  .blog-count {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0;
+  }
+
+  .posts-grid {
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .no-posts {
+    color: var(--text-muted);
+    text-align: center;
+    padding: var(--space-xl);
+  }
+</style>

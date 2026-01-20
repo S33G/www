@@ -1,0 +1,105 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Navigation from '@/components/ui/Navigation.astro';
+import ASCIIBackground from '@/components/ascii/ASCIIBackground.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <ASCIIBackground />
+
+  <div class="page-layout">
+    <Navigation />
+
+    <main id="main-content" class="main-content">
+      <div class="content-wrapper" transition:animate="fade">
+        <slot />
+      </div>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .content-wrapper {
+    width: 100%;
+    max-width: var(--container-max);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-md);
+  }
+
+  :global([data-astro-transition="fade"]) {
+    animation: page-zoom-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes page-zoom-in {
+    0% {
+      transform: scale(0.88);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .main-content {
+      padding: var(--space-md) var(--space-sm);
+    }
+
+    .content-wrapper {
+      padding: var(--space-md);
+      border-radius: var(--border-radius-sm);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .content-wrapper {
+      border-left: none;
+      border-right: none;
+      border-radius: 0;
+    }
+  }
+</style>
+
+<script>
+  function triggerPageExplosion() {
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('ascii-trigger-explosion', {
+        detail: { x: 0.5, y: 0.4 }
+      }));
+    }, 100);
+  }
+
+  // Run on initial load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', triggerPageExplosion);
+  } else {
+    triggerPageExplosion();
+  }
+
+  // Run on view transitions
+  document.addEventListener('astro:after-swap', triggerPageExplosion);
+</script>

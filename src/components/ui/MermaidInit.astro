@@ -1,0 +1,34 @@
+---
+// Mermaid initialization component - renders mermaid diagrams on the client
+---
+
+<script>
+  import mermaid from 'mermaid';
+
+  async function renderMermaid() {
+    const nodes = Array.from(document.querySelectorAll('.mermaid')).filter(
+      (node) => !node.hasAttribute('data-processed')
+    ) as HTMLElement[];
+
+    if (nodes.length === 0) return;
+
+    const isLight = document.documentElement.dataset.theme === 'light';
+
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: 'strict',
+      theme: isLight ? 'dark' : 'dark',
+    });
+
+    await mermaid.run({ nodes });
+  }
+
+  // Run on initial load
+  renderMermaid();
+
+  // Run after view transitions
+  document.addEventListener('astro:after-swap', renderMermaid);
+
+  // Run when theme changes
+  document.addEventListener('preferences-change', renderMermaid);
+</script>

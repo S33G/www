@@ -1,0 +1,108 @@
+---
+import { formatDate } from '@/lib/utils';
+
+interface Props {
+  slug: string;
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags?: string[];
+}
+
+const { slug, title, description, pubDate, tags = [] } = Astro.props;
+---
+
+<article class="post-card">
+  <a href={`/blog/${slug}`} class="post-link">
+    <header class="post-card-header">
+      <time datetime={pubDate.toISOString()} class="post-date">
+        {formatDate(pubDate)}
+      </time>
+      <h2 class="post-title">{title}</h2>
+    </header>
+
+    <p class="post-description">{description}</p>
+
+    {tags.length > 0 && (
+      <footer class="post-card-footer">
+        <div class="post-tags">
+          {tags.slice(0, 3).map((tag) => (
+            <span class="tag">{tag}</span>
+          ))}
+        </div>
+      </footer>
+    )}
+  </a>
+</article>
+
+<style>
+  .post-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+    background: var(--bg-primary);
+  }
+
+  .post-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .post-link {
+    display: block;
+    padding: var(--space-md);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .post-card-header {
+    margin-bottom: var(--space-sm);
+  }
+
+  .post-date {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-xs);
+  }
+
+  .post-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    transition: color var(--transition-fast);
+  }
+
+  .post-card:hover .post-title {
+    color: var(--color-primary);
+  }
+
+  .post-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .post-card-footer {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .post-tags {
+    display: flex;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    color: var(--color-primary);
+    background: var(--ascii-tint);
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+  }
+</style>

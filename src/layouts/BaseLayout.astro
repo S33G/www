@@ -1,0 +1,60 @@
+---
+import '@/styles/global.css';
+import { ViewTransitions } from 'astro:transitions';
+import { preferencesScript } from '@/lib/preferences';
+import SkipLink from '@/components/ui/SkipLink.astro';
+import SEOHead from '@/components/ui/SEOHead.astro';
+import SettingsPanel from '@/components/ui/SettingsPanel';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  article?: {
+    publishedTime: string;
+    tags?: string[];
+  };
+}
+
+const { title, description = 'A developer blog with ASCII aesthetics', image, article } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Prevent theme flash -->
+    <script is:inline set:html={preferencesScript} />
+
+    <ViewTransitions />
+
+    <SEOHead
+      title={title}
+      description={description}
+      canonicalURL={canonicalURL.toString()}
+      image={image}
+      article={article}
+    />
+
+    <!-- Preload mono font -->
+    <link
+      rel="preload"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+      as="style"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+    />
+  </head>
+  <body>
+    <SkipLink />
+    <slot />
+    <SettingsPanel client:load />
+  </body>
+</html>

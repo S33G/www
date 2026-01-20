@@ -1,0 +1,128 @@
+---
+import type { EffectType } from '@/lib/ascii';
+
+interface Props {
+  effect?: EffectType;
+}
+
+const { effect = 'wave' } = Astro.props;
+---
+
+<div
+  id="ascii-background"
+  class="ascii-background"
+  role="img"
+  aria-label="Animated ASCII art background"
+  aria-hidden="true"
+  data-effect={effect}
+>
+</div>
+
+<script>
+  import { ASCIIRenderer, type EffectType } from '@/lib/ascii';
+  import { loadPreferences, COLOR_THEMES } from '@/lib/preferences';
+
+  function initASCII() {
+    const container = document.getElementById('ascii-background');
+    if (!container) return;
+
+    // Check for reduced motion preference
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      container.style.opacity = '0.3';
+      return;
+    }
+
+    // Load saved preferences
+    const prefs = loadPreferences();
+    const effect = prefs.effect || (container.dataset.effect as EffectType) || 'wave';
+    const colorTheme = COLOR_THEMES[prefs.colorTheme] || COLOR_THEMES.green;
+
+    let renderer: ASCIIRenderer | null = null;
+
+    try {
+      renderer = new ASCIIRenderer({
+        container,
+        effect,
+        fontSize: 14,
+        speed: prefs.speed || 1,
+        intensity: prefs.intensity || 0.6,
+        color: colorTheme.primary,
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#0f0f0f',
+      });
+
+      renderer.start();
+    } catch (error) {
+      console.error('Failed to initialize ASCII renderer:', error);
+    }
+
+    // Listen for settings changes from the SettingsPanel
+    const handleSettingsChange = (e: CustomEvent<{
+      effect: EffectType;
+      speed: number;
+      intensity: number;
+      color: string;
+    }>) => {
+      if (renderer) {
+        renderer.setEffect(e.detail.effect);
+        renderer.setSpeed(e.detail.speed);
+        renderer.setIntensity(e.detail.intensity);
+        renderer.setColor(e.detail.color);
+      }
+    };
+
+    // Legacy: Listen for effect changes from CLI (if still used)
+    const handleEffectChange = (e: CustomEvent<EffectType>) => {
+      if (renderer) {
+        renderer.setEffect(e.detail);
+      }
+    };
+
+    const handleExplosion = (e: CustomEvent<{x: number, y: number}>) => {
+      if (renderer) {
+        renderer.triggerExplosion(e.detail.x, e.detail.y);
+      }
+    };
+
+    window.addEventListener('ascii-settings-change', handleSettingsChange as EventListener);
+    window.addEventListener('ascii-effect-change', handleEffectChange as EventListener);
+    window.addEventListener('ascii-trigger-explosion', handleExplosion as EventListener);
+
+    // Cleanup on page navigation
+    document.addEventListener('astro:before-swap', () => {
+      if (renderer) {
+        renderer.destroy();
+        renderer = null;
+      }
+      window.removeEventListener('ascii-settings-change', handleSettingsChange as EventListener);
+      window.removeEventListener('ascii-effect-change', handleEffectChange as EventListener);
+      window.removeEventListener('ascii-trigger-explosion', handleExplosion as EventListener);
+    }, { once: true });
+  }
+
+  // Initialize
+  initASCII();
+
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:after-swap', initASCII);
+</script>
+
+<style>
+  .ascii-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ascii-background {
+      opacity: 0.2;
+      transition: none;
+    }
+  }
+</style>

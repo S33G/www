@@ -1,0 +1,239 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import Navigation from '@/components/ui/Navigation.astro';
+import PostTitle from '@/components/content/PostTitle.astro';
+import ASCIIBackground from '@/components/ascii/ASCIIBackground.astro';
+import { formatDate } from '@/lib/utils';
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+    pubDate: Date;
+    updatedDate?: Date;
+    tags?: string[];
+    image?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+---
+
+<BaseLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  image={frontmatter.image}
+  article={{
+    publishedTime: frontmatter.pubDate.toISOString(),
+    tags: frontmatter.tags,
+  }}
+>
+  <ASCIIBackground />
+
+  <div class="post-layout">
+    <Navigation />
+
+    <main id="main-content">
+      <article class="post" transition:animate="fade">
+        <header class="post-header">
+          <a href="/blog" class="back-link">← Back to posts</a>
+          <PostTitle title={frontmatter.title} />
+          <div class="post-meta">
+            <time datetime={frontmatter.pubDate.toISOString()}>
+              {formatDate(frontmatter.pubDate)}
+            </time>
+            {frontmatter.updatedDate && (
+              <span class="updated">
+                · Updated {formatDate(frontmatter.updatedDate)}
+              </span>
+            )}
+          </div>
+          {frontmatter.tags && frontmatter.tags.length > 0 && (
+            <div class="post-tags">
+              {frontmatter.tags.map((tag) => (
+                <a href={`/blog/tags/${tag}`} class="tag">{tag}</a>
+              ))}
+            </div>
+          )}
+        </header>
+
+        <div class="post-content">
+          <slot />
+        </div>
+
+        <footer class="post-footer">
+          <a href="/blog" class="back-link">← Back to all posts</a>
+        </footer>
+      </article>
+    </main>
+  </div>
+</BaseLayout>
+
+<style>
+  .post-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .post {
+    max-width: var(--container-max);
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-md);
+  }
+
+  :global([data-astro-transition="fade"]) {
+    animation: page-zoom-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes page-zoom-in {
+    0% {
+      transform: scale(0.88);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .post-header {
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-header h1 {
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  .post-header h1 :global(code) {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.2em 0.4em;
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    color: var(--color-primary);
+  }
+
+  .post-meta {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+  }
+
+  .updated {
+    margin-left: var(--space-xs);
+  }
+
+  .post-tags {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    color: var(--color-primary);
+    background: var(--ascii-tint);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+  }
+
+  .tag:hover {
+    background: var(--color-primary);
+    color: white;
+  }
+
+  .post-content {
+    line-height: 1.8;
+  }
+
+  .post-content :global(h2) {
+    margin-top: var(--space-xl);
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+  }
+
+  .post-content :global(h3) {
+    margin-top: var(--space-lg);
+    color: var(--text-primary);
+  }
+
+  .post-content :global(pre) {
+    margin: var(--space-md) 0;
+  }
+
+  .post-content :global(.mermaid) {
+    margin: var(--space-lg) calc(-1 * var(--space-xl));
+    padding: var(--space-lg) var(--space-xl);
+    overflow-x: auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  .post-content :global(.mermaid svg) {
+    height: auto;
+  }
+
+  .post-content :global(img) {
+    margin-left: calc(-1 * var(--space-xl));
+    margin-right: calc(-1 * var(--space-xl));
+    width: calc(100% + 2 * var(--space-xl));
+    height: auto;
+    border-radius: var(--border-radius-sm);
+  }
+
+  .post-footer {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .back-link {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: var(--space-md);
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--color-primary);
+  }
+
+  @media (max-width: 768px) {
+    main {
+      padding: var(--space-md) var(--space-sm);
+    }
+
+    .post {
+      padding: var(--space-lg);
+      border-radius: var(--border-radius-sm);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .post {
+      border-left: none;
+      border-right: none;
+      border-radius: 0;
+    }
+  }
+</style>

@@ -1,0 +1,16 @@
+{
+  "repos": [
+    {
+      "owner": "s33g",
+      "name": "ascii-blog",
+      "featured": true,
+      "description": "A TypeScript ASCII blog with WebGL effects"
+    },
+    {
+      "owner": "s33g",
+      "name": "proj",
+      "featured": true,
+      "description": "A fast TUI project navigator to browse and run actions across local code folders"
+    }
+  ]
+}

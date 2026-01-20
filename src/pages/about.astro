@@ -1,0 +1,327 @@
+---
+import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
+---
+
+<ConsoleLayout title="About" description="Charlie (S33G) - Engineer & Tech Evangelist">
+  <div class="about-content">
+    <header class="about-header">
+      <pre class="ascii-portrait" aria-hidden="true">
+{`
+    .--.
+   |o_o |
+   |:_/ |
+  //   \\ \\
+ (|     | )
+/'\\_   _/\`\\
+\\___)=(___/
+`}
+      </pre>
+      <div class="about-intro">
+        <h1>Hey, I'm Charlie 👋</h1>
+        <p class="tagline">aka S33G — engineer // maker // tinkerer</p>
+      </div>
+    </header>
+
+    <section class="about-section">
+      <p>
+        I'm a senior software engineer who likes to keep things simple, ship fast, and focus on business value. I started my first company in 2006, grew up building B2B sites with my dad's studio, and have since shipped across startups and large enterprises (intentionally keeping names private—happy to share details when we chat).
+      </p>
+      <p>
+        I enjoy untangling messy processes, improving developer experience and user experience in tandem, and working with great people to get great results. Self-taught, open source minded, always thinking around corners.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2>What I value</h2>
+      <ul class="value-list">
+        <li>Simplifying the annoying parts of software so teams can move faster.</li>
+        <li>Pairing UX polish with solid engineering so users and developers both win.</li>
+        <li>Using generative AI thoughtfully to accelerate productivity and knowledge sharing.</li>
+        <li>Staying curious, pragmatic, and willing to challenge defaults.</li>
+      </ul>
+    </section>
+
+    <section class="about-section">
+      <h2>Current focus</h2>
+      <div class="skills-grid">
+        <span class="skill-tag">Senior Engineering</span>
+        <span class="skill-tag">Developer Experience</span>
+        <span class="skill-tag">User Experience</span>
+        <span class="skill-tag">Generative AI</span>
+        <span class="skill-tag">Automation</span>
+        <span class="skill-tag">LLM tooling</span>
+        <span class="skill-tag">Node.js</span>
+        <span class="skill-tag">React</span>
+        <span class="skill-tag">APIs</span>
+        <span class="skill-tag">Infrastructure</span>
+        <span class="skill-tag">Mentorship</span>
+      </div>
+    </section>
+
+    <section class="about-section">
+      <h2>Projects & tools</h2>
+      <ul class="projects-list">
+        <li>
+          <div class="project-header">
+            <a class="project-name" href="https://github.com/S33G/proj" target="_blank" rel="noopener noreferrer">proj</a>
+            <span class="project-date">2026-01-19</span>
+          </div>
+          <p class="project-desc">
+            A portable Go rewrite of a personal tool I've used for years—gives fast overviews of local code folders and lets developers trigger common project actions without the usual setup friction.
+          </p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="about-section">
+      <h2>Path so far (high level)</h2>
+      <ul class="timeline">
+        <li>
+          <span class="timeline-title">Bedroom startup & hosting (2006)</span>
+          <p>Co-founded a small web dev + hosting shop with a friend; learned by shipping and fixing our own mistakes.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Family B2B studio</span>
+          <p>Built bespoke sites and branding-driven experiences for clients; hands-on with everything from design tweaks to infrastructure.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Early agency + product work</span>
+          <p>Delivered commercial projects while studying, collaborating closely with designers to merge brand thinking with execution.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Platform and SaaS teams</span>
+          <p>Led feature delivery, hosting, and infra support for new builds; helped pitch and shape solutions that balanced innovation with reliability.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Media & comms platform</span>
+          <p>Improved performance and built features for tools connecting journalists and PR teams; focused on reliability and workflow clarity.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Health & fitness SaaS</span>
+          <p>Guided a team building a next-gen platform for coaches—client management, scheduling, performance tracking—shipping fast with quality.</p>
+        </li>
+        <li>
+          <span class="timeline-title">High-velocity product delivery</span>
+          <p>Worked in an agile squad shipping daily to production; improved dev environments, APIs, and internal tooling to cut lead times.</p>
+        </li>
+        <li>
+          <span class="timeline-title">E-commerce SaaS</span>
+          <p>Partnered with a stellar team on a food and beverage ordering platform, refining the experience end to end.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Consulting & automation</span>
+          <p>Built full-stack JS solutions, automated logistics and invoicing, improved reporting, and coached small teams on modern delivery.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Design systems & fintech</span>
+          <p>Contributed to design system components at scale and built APIs/UI for a savings and wealth platform—performance-minded, user-focused.</p>
+        </li>
+        <li>
+          <span class="timeline-title">Film & TV Streaming UI (current)</span>
+          <p>Senior engineer enhancing UI across a global streaming ecosystem; ship features, monitor performance, and use AI tooling to speed delivery.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="about-section">
+      <h2>Outside of work</h2>
+      <p>
+        Family time, FPV drones, homelab tinkering, home automation, photography/video, and an ongoing soft spot for cars.
+      </p>
+    </section>
+
+    <section class="about-section">
+      <h2>Get in touch</h2>
+      <p class="contact-copy">Website intentionally anonymous; happy to share specifics when we talk.</p>
+      <div class="contact-links">
+        <a href="https://github.com/S33G" target="_blank" rel="noopener noreferrer">
+          GitHub
+        </a>
+        <a href="https://linkedin.com/in/s33g" target="_blank" rel="noopener noreferrer">
+          LinkedIn
+        </a>
+      </div>
+    </section>
+  </div>
+</ConsoleLayout>
+
+<style>
+  .about-content {
+    max-width: 100%;
+  }
+
+  .about-header {
+    display: flex;
+    gap: var(--space-lg);
+    align-items: center;
+    margin-bottom: var(--space-lg);
+    padding-bottom: var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .ascii-portrait {
+    font-size: var(--font-size-sm);
+    line-height: 1.2;
+    color: var(--color-primary);
+    margin: 0;
+    font-family: var(--font-mono);
+  }
+
+  .about-intro h1 {
+    margin: 0 0 var(--space-xs);
+    color: var(--text-primary);
+    font-size: var(--font-size-xl);
+  }
+
+  .tagline {
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .about-section {
+    margin-bottom: var(--space-lg);
+  }
+
+  .about-section h2 {
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--space-sm);
+  }
+
+  .about-section p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .value-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .value-list li {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-secondary);
+  }
+
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .skill-tag {
+    background: var(--ascii-tint);
+    border: 1px solid var(--border-color);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: 6px;
+    font-size: var(--font-size-sm);
+    color: var(--color-primary);
+  }
+
+  .projects-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-sm);
+  }
+
+  .project-name {
+    font-weight: 600;
+    color: var(--color-primary);
+  }
+
+  .project-date {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    white-space: nowrap;
+  }
+
+  .project-desc {
+    color: var(--text-secondary);
+    margin: var(--space-xs) 0 0;
+    line-height: 1.6;
+  }
+
+  .timeline {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: var(--space-md);
+  }
+
+  .timeline-title {
+    display: inline-block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .timeline p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  .contact-links {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+  }
+
+  .contact-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+
+  .contact-links a:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .contact-copy {
+    color: var(--text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  @media (max-width: 640px) {
+    .about-header {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .ascii-portrait {
+      font-size: 0.6rem;
+    }
+
+    .skills-grid {
+      justify-content: center;
+    }
+
+    .contact-links {
+      justify-content: center;
+    }
+  }
+</style>

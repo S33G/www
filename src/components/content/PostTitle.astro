@@ -1,0 +1,46 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+
+// Parse inline code blocks in title
+// Converts `text` to <code>text</code>
+const parseInlineCode = (str: string) => {
+  return str.split(/(`[^`]+`)/g).map((part, i) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return part.slice(1, -1); // Remove backticks, will be wrapped by parent
+    }
+    return part;
+  });
+};
+
+const parts = parseInlineCode(title);
+---
+
+<h1>
+  {parts.map((part, i) => {
+    // Check if this part is code by looking at original
+    const isCode = title.includes(`\`${part}\``);
+    return isCode ? <code>{part}</code> : part;
+  })}
+</h1>
+
+<style>
+  h1 {
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+  }
+
+  code {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.2em 0.4em;
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+    color: var(--color-primary);
+  }
+</style>

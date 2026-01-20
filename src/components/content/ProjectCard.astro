@@ -1,0 +1,123 @@
+---
+interface Props {
+  name: string;
+  description: string | null;
+  url: string;
+  stars?: number;
+  language?: string | null;
+}
+
+const { name, description, url, stars = 0, language } = Astro.props;
+---
+
+<article class="project-card">
+  <a href={url} target="_blank" rel="noopener noreferrer" class="project-link">
+    <header class="project-header">
+      <h2 class="project-name">{name}</h2>
+      <span class="project-arrow" aria-hidden="true">→</span>
+    </header>
+
+    <p class="project-description">
+      {description || 'No description available'}
+    </p>
+
+    <footer class="project-footer">
+      {language && (
+        <span class="project-language">
+          <span class="language-dot" aria-hidden="true"></span>
+          {language}
+        </span>
+      )}
+      {stars > 0 && (
+        <span class="project-stars">
+          ★ {stars}
+        </span>
+      )}
+    </footer>
+  </a>
+</article>
+
+<style>
+  .project-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    transition: all var(--transition-fast);
+    background: var(--bg-primary);
+  }
+
+  .project-card:hover {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .project-link {
+    display: block;
+    padding: var(--space-md);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .project-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-sm);
+  }
+
+  .project-name {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    transition: color var(--transition-fast);
+  }
+
+  .project-card:hover .project-name {
+    color: var(--color-primary);
+  }
+
+  .project-arrow {
+    color: var(--text-muted);
+    transition: transform var(--transition-fast), color var(--transition-fast);
+  }
+
+  .project-card:hover .project-arrow {
+    transform: translateX(4px);
+    color: var(--color-primary);
+  }
+
+  .project-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .project-footer {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  .project-language {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .language-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-primary);
+  }
+
+  .project-stars {
+    color: #f59e0b;
+  }
+</style>

@@ -1,0 +1,109 @@
+---
+const currentPath = Astro.url.pathname;
+
+const navLinks = [
+  { href: '/blog', label: 'Blog', title: 'Blog' },
+  { href: '/projects', label: 'Projects', title: 'Projects' },
+  { href: '/about', label: 'About', title: 'About' },
+];
+---
+
+<nav class="navigation" aria-label="Main navigation">
+  <div class="nav-brand">
+    <a href="/" class="brand-link" aria-label="Home">
+      <span class="brand-text">s33g</span>
+    </a>
+  </div>
+
+  <ul class="nav-links" role="list">
+    {navLinks.map(({ href, label, title }) => (
+      <li>
+        <a
+          href={href}
+          class:list={['nav-link', { active: currentPath === href || (href !== '/' && currentPath.startsWith(href)) }]}
+          aria-current={currentPath === href ? 'page' : undefined}
+          title={title}
+        >
+          {label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  .navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-brand {
+    flex-shrink: 0;
+  }
+
+  .brand-link {
+    display: flex;
+    align-items: center;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+    font-family: var(--font-mono);
+  }
+
+  .brand-text {
+    color: var(--color-primary);
+  }
+
+  .nav-links {
+    display: flex;
+    gap: var(--space-xs);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+  }
+
+  .nav-link:hover,
+  .nav-link:focus {
+    color: var(--text-primary);
+    background: var(--bg-elevated);
+  }
+
+  .nav-link.active {
+    color: var(--color-primary);
+    background: var(--ascii-tint);
+  }
+
+  @media (max-width: 640px) {
+    .navigation {
+      padding: var(--space-sm) var(--space-md);
+    }
+
+    .nav-links {
+      gap: 0;
+    }
+
+    .nav-link {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+    }
+  }
+</style>
