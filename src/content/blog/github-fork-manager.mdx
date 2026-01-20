@@ -1,0 +1,55 @@
+---
+title: 'GitHub Fork Manager: cleaning up forks without the pain'
+description: 'A fast, terminal-first tool to delete forks (or repos) safely at scale, with guardrails and logs.'
+pubDate: 2026-01-20 10:12:14
+tags: ['tools', 'go', 'tui', 'github', 'dx']
+---
+
+I built `github-fork-manager` because the GitHub UI makes it intentionally hard to delete lots of repositories. That’s the right trade-off for most people. But if you’re the type who prototypes, forks, and experiments a lot, the clutter adds up fast.
+
+I wanted a deliberate, terminal-native tool that makes cleanup possible **without** removing the guardrails. It’s powerful, but it’s not casual.
+
+- Repo: https://github.com/S33G/github-fork-manager
+
+## Why I did it
+
+- GitHub’s UI is designed to prevent mass deletion (for good reason).
+- I had dozens of old forks and one-off experiments to prune.
+- I wanted a fast, repeatable workflow.
+
+## What I built
+
+A TUI (terminal UI) that lists your forks (or owned repos), lets you filter and multi-select, and then deletes in a safe, logged sequence—with a confirmation phrase required before anything destructive happens.
+
+## What I used
+
+- **[Go 1.22+](https://go.dev/)** for speed, portability, and easy cross-platform builds
+- **[GitHub REST API v3](https://docs.github.com/en/rest)** for repo management
+- **[Bubble Tea](https://github.com/charmbracelet/bubbletea)** for the TUI runtime
+- **[Bubbles](https://github.com/charmbracelet/bubbles)** for ready-made TUI components
+- **[Lip Gloss](https://github.com/charmbracelet/lipgloss)** for styling the terminal UI
+- **TUI + keyboard navigation** for fast, repeatable workflows
+- **Logging** to `~/.github-fork-manager/actions.log` for auditability
+
+## How it works (high level)
+
+1. Load config or environment (`GITHUB_TOKEN`, optional `api_base`).
+2. Fetch repos (forks by default, owned repos with `--non-forks`).
+3. Render list with filter + multi-select.
+4. Require explicit confirmation text: `<username> approves`.
+5. Delete sequentially, log each action, show progress + errors.
+
+## A note on safety
+
+This tool is dangerous in the wrong hands. It deletes repositories—permanently.
+I’m assuming you understand what you’re doing, you scope your token correctly, and you’re comfortable with the consequences.
+
+If that sounds too sharp, don’t use it. If it sounds useful, read the README, run it carefully, and start with a small selection.
+
+## Want to contribute?
+
+Issues and PRs are welcome. If you see a sharp edge or have an idea to make the workflow safer or smoother, open a ticket and let’s improve it.
+
+---
+
+If you try it, I’d love to hear what you think.
