@@ -154,25 +154,18 @@ export function isPageVisible(): boolean {
 }
 
 /**
- * Detect if running on ARM architecture (mobile, Apple Silicon, etc.)
+ * Detect if running on mobile device (for performance adjustments)
+ * Note: Apple Silicon Macs should NOT be detected as mobile - they're powerful enough
  */
-export function isArmDevice(): boolean {
+export function isMobileDevice(): boolean {
   if (typeof navigator === 'undefined') return false;
 
   const ua = navigator.userAgent.toLowerCase();
-  const platform = (navigator.platform || '').toLowerCase();
 
-  // Check for ARM indicators
-  const isArm =
-    ua.includes('arm') ||
-    ua.includes('aarch64') ||
-    platform.includes('arm') ||
-    // Apple Silicon Macs report as MacIntel but we can detect via other means
-    (platform === 'macintel' && navigator.maxTouchPoints > 0) ||
-    // Mobile devices (mostly ARM)
-    /android|iphone|ipad|ipod/i.test(ua);
+  // Only detect actual mobile devices, not desktop ARM
+  const isMobile = /android|iphone|ipad|ipod|mobile|tablet/i.test(ua);
 
-  return isArm;
+  return isMobile;
 }
 
 /**
@@ -197,6 +190,6 @@ export async function isOnBattery(): Promise<boolean> {
  */
 export function getRecommendedQuality(): QualityLevel {
   if (prefersReducedMotion()) return 'low';
-  if (isArmDevice()) return 'low';
+  if (isMobileDevice()) return 'low';
   return 'medium';
 }

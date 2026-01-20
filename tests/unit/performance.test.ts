@@ -4,7 +4,7 @@ import {
   QUALITY_PRESETS,
   prefersReducedMotion,
   isPageVisible,
-  isArmDevice,
+  isMobileDevice,
   getRecommendedQuality,
   type QualityLevel,
 } from '@/lib/ascii/performance';
@@ -139,7 +139,7 @@ describe('Performance Module', () => {
     });
   });
 
-  describe('isArmDevice', () => {
+  describe('isMobileDevice', () => {
     const originalNavigator = globalThis.navigator;
 
     afterEach(() => {
@@ -153,20 +153,7 @@ describe('Performance Module', () => {
       // @ts-expect-error Testing undefined case
       globalThis.navigator = undefined;
 
-      expect(isArmDevice()).toBe(false);
-    });
-
-    it('detects ARM in userAgent', () => {
-      Object.defineProperty(globalThis, 'navigator', {
-        value: {
-          userAgent: 'Mozilla/5.0 (Linux; arm64)',
-          platform: '',
-          maxTouchPoints: 0,
-        },
-        configurable: true,
-      });
-
-      expect(isArmDevice()).toBe(true);
+      expect(isMobileDevice()).toBe(false);
     });
 
     it('detects Android devices', () => {
@@ -179,7 +166,7 @@ describe('Performance Module', () => {
         configurable: true,
       });
 
-      expect(isArmDevice()).toBe(true);
+      expect(isMobileDevice()).toBe(true);
     });
 
     it('detects iPhone', () => {
@@ -192,23 +179,23 @@ describe('Performance Module', () => {
         configurable: true,
       });
 
-      expect(isArmDevice()).toBe(true);
+      expect(isMobileDevice()).toBe(true);
     });
 
-    it('detects Apple Silicon Mac', () => {
+    it('detects iPad', () => {
       Object.defineProperty(globalThis, 'navigator', {
         value: {
-          userAgent: 'Mozilla/5.0 (Macintosh)',
-          platform: 'MacIntel',
-          maxTouchPoints: 5, // Apple Silicon Macs with touch bar
+          userAgent: 'Mozilla/5.0 (iPad; CPU OS 15_0)',
+          platform: '',
+          maxTouchPoints: 5,
         },
         configurable: true,
       });
 
-      expect(isArmDevice()).toBe(true);
+      expect(isMobileDevice()).toBe(true);
     });
 
-    it('returns false for Intel Mac', () => {
+    it('returns false for desktop Mac', () => {
       Object.defineProperty(globalThis, 'navigator', {
         value: {
           userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X)',
@@ -218,7 +205,20 @@ describe('Performance Module', () => {
         configurable: true,
       });
 
-      expect(isArmDevice()).toBe(false);
+      expect(isMobileDevice()).toBe(false);
+    });
+
+    it('returns false for desktop Linux', () => {
+      Object.defineProperty(globalThis, 'navigator', {
+        value: {
+          userAgent: 'Mozilla/5.0 (X11; Linux x86_64)',
+          platform: 'Linux x86_64',
+          maxTouchPoints: 0,
+        },
+        configurable: true,
+      });
+
+      expect(isMobileDevice()).toBe(false);
     });
   });
 
@@ -234,7 +234,7 @@ describe('Performance Module', () => {
       window.matchMedia = originalMatchMedia;
     });
 
-    it('returns low for ARM devices', () => {
+    it('returns low for mobile devices', () => {
       Object.defineProperty(globalThis, 'navigator', {
         value: {
           userAgent: 'Mozilla/5.0 (iPhone)',
