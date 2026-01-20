@@ -291,13 +291,15 @@ export class ASCIIRenderer {
   }
 
   start(): void {
-    if (prefersReducedMotion()) {
-      this.renderStatic();
-      return;
-    }
-
     this.isRunning = true;
     this.animate();
+  }
+
+  /**
+   * Render a single static frame (for reduced motion or fallback)
+   */
+  renderStaticFrame(): void {
+    this.renderStatic();
   }
 
   pause(): void {

@@ -26,16 +26,16 @@ const { effect = 'wave' } = Astro.props;
     const container = document.getElementById('ascii-background');
     if (!container) return;
 
-    // Check for reduced motion preference
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      container.style.opacity = '0.3';
-      return;
-    }
-
     // Load saved preferences
     const prefs = loadPreferences();
     const effect = prefs.effect || (container.dataset.effect as EffectType) || 'wave';
     const colorTheme = COLOR_THEMES[prefs.colorTheme] || COLOR_THEMES.green;
+
+    // Check for reduced motion preference - still render but static
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // Detect mobile for performance adjustments
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     let renderer: ASCIIRenderer | null = null;
 
@@ -43,14 +43,20 @@ const { effect = 'wave' } = Astro.props;
       renderer = new ASCIIRenderer({
         container,
         effect,
-        fontSize: 14,
+        fontSize: isMobile ? 16 : 14, // Larger font on mobile = fewer cells
         speed: prefs.speed || 1,
         intensity: prefs.intensity || 0.6,
         color: colorTheme.primary,
         backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim() || '#0f0f0f',
       });
 
-      renderer.start();
+      // On reduced motion, render static frame; otherwise animate
+      if (reducedMotion) {
+        container.style.opacity = '0.3';
+        renderer.renderStaticFrame();
+      } else {
+        renderer.start();
+      }
     } catch (error) {
       console.error('Failed to initialize ASCII renderer:', error);
     }
