@@ -14,8 +14,8 @@ export default function NavigationLogo() {
     { char: 'e', isGlitching: false },
     { char: 'g', isGlitching: false },
   ]);
-  const cycleTimeoutRef = useRef<NodeJS.Timeout>();
-  const glitchTimeoutRef = useRef<NodeJS.Timeout>();
+  const cycleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const glitchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Animate glitch effect
   const triggerGlitch = (newVariant: 'seeg' | 's33g') => {
@@ -27,14 +27,14 @@ export default function NavigationLogo() {
     const glitchStep = () => {
       // Randomly glitch some characters
       setLogoChars(prev =>
-        prev.map(() => {
+        prev.map(char => {
           if (Math.random() < 0.5) {
             return {
               char: GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)],
               isGlitching: true,
             };
           }
-          return;
+          return char;
         })
       );
 
