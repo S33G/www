@@ -23,7 +23,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   speed: 1,
   colorTheme: 'green',
   intensity: 0.6,
-  autoCycle: false,
+  autoCycle: true,
 };
 
 // Color themes with primary (UI) and background (ASCII effect) colors
