@@ -15,6 +15,7 @@ export interface Preferences {
   colorTheme: ColorTheme;
   intensity: number; // 0.1 - 1
   autoCycle: boolean;
+  showFps: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -24,6 +25,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   colorTheme: 'green',
   intensity: 0.6,
   autoCycle: true,
+  showFps: false,
 };
 
 // Color themes with primary (UI) and background (ASCII effect) colors
@@ -212,4 +214,3 @@ export const preferencesScript = `
   } catch (e) {}
 })();
 `;
-

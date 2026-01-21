@@ -1,5 +1,12 @@
 import { visit } from 'unist-util-visit';
 
+function nodeToText(node) {
+  if (!node) return '';
+  if (node.type === 'text') return node.value ?? '';
+  if (!Array.isArray(node.children)) return '';
+  return node.children.map(nodeToText).join('');
+}
+
 function normalizeClassList(className) {
   if (!className) return [];
   if (Array.isArray(className)) return className.map(String);
@@ -26,28 +33,20 @@ export default function rehypeMermaid() {
 
       const classList = normalizeClassList(code.properties?.className);
 
-      console.log('Found code block:', {
-        preLanguage,
-        classList,
-        properties: code.properties
-      });
-
       const isMermaid =
         preLanguage === 'mermaid' ||
         classList.some((value) => value === 'language-mermaid' || value.endsWith('language-mermaid'));
 
       if (!isMermaid) return;
 
-      const children = Array.isArray(code.children) ? code.children : [];
-      if (children.length === 0) return;
-
-      console.log('Converting mermaid code block to div');
+      const diagram = nodeToText(code).trim();
+      if (!diagram) return;
 
       parent.children[index] = {
         type: 'element',
         tagName: 'div',
         properties: { className: ['mermaid'] },
-        children,
+        children: [{ type: 'text', value: diagram }],
       };
     });
   };

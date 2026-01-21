@@ -1,0 +1,102 @@
+---
+// src/components/ui/AnimatedFavicon.astro
+---
+
+<link rel="icon" id="dynamic-favicon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABZSURBVHic7dMhEQAwEIBBd5DwC/sRjFJBzJyxuIk5Y3EBc8biAuaM5YXMGYsLmDOWFzBnLC9gzljewJyxvIE5Y3kDc8byBuaM5Q3MGcsbmDPWA1JKSUlJSUlJSQH4AtxsB1OqLIl8AAAAAElFTkSuQmCC" sizes="32x32">
+
+<script>
+  const frames = ['s', 'e', 'e', 'g'];
+  const frameDuration = 800; // ms per frame
+  let currentFrame = 0;
+  let rafId = 0;
+  let canvas: HTMLCanvasElement;
+  let ctx: CanvasRenderingContext2D | null;
+  let faviconLink: HTMLElement | null;
+
+  function init() {
+    faviconLink = document.getElementById('dynamic-favicon');
+    canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    // Get colors from CSS variables or defaults
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--bg-primary')
+      .trim() || '#0f0f0f';
+    const textColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--text-primary')
+      .trim() || '#ffffff';
+
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 32, 32);
+    ctx.fillStyle = textColor;
+    ctx.font = 'bold 24px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    updateFavicon();
+  }
+
+  function updateFavicon() {
+    if (!ctx || !faviconLink) return;
+
+    const bgColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--bg-primary')
+      .trim() || '#0f0f0f';
+    const textColor = getComputedStyle(document.documentElement)
+      .getPropertyValue('--text-primary')
+      .trim() || '#ffffff';
+
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, 32, 32);
+    ctx.fillStyle = textColor;
+    ctx.font = 'bold 24px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(frames[currentFrame], 16, 16);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    faviconLink.setAttribute('href', dataUrl);
+  }
+
+  function animate() {
+    currentFrame = (currentFrame + 1) % frames.length;
+    updateFavicon();
+    rafId = setTimeout(() => {
+      animate();
+    }, frameDuration);
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Handle theme changes
+  const themeObserver = new MutationObserver(() => {
+    updateFavicon();
+  });
+
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+
+  // Start animation
+  setTimeout(() => {
+    animate();
+  }, frameDuration);
+
+  // Cleanup
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      clearTimeout(rafId);
+      themeObserver.disconnect();
+    });
+  }
+</script>

@@ -1,0 +1,82 @@
+---
+title: 'Better ASCII animations with WebGL'
+description: 'Canvas 2D got me a working ASCII background, but WebGL2 is what made it smooth at real viewport sizes.'
+pubDate: 2026-01-21
+tags: ['astro', 'performance', 'ascii', 'web']
+---
+
+I started this site’s ASCII background renderer in Canvas 2D because it’s the fastest way to get pixels on screen.
+
+That worked… until I deployed it to GitHub Pages and tested on real devices. Suddenly, what felt smooth on my dev machine (Ryzen 9 7900X3D) was sluggish on many users’ devices. Namely MacBook Air M1.
+
+So the real improvement wasn’t “render it earlier” or “render it somewhere else” — it was switching the renderer to WebGL2 so the steady-state work lives on the GPU.
+
+## WebGL over Canvas 2D
+
+I’ve now moved from Canvas 2D to WebGL2 for rendering. The difference is substantial.
+
+### The problem with Canvas 2D
+
+Canvas 2D is synchronous and CPU-bound. When you animate a full-screen grid, it trends toward “death by a thousand calls”: lots of text draws, lots of state changes, lots of work on the main thread.
+
+```typescript
+for (let y = 0; y < rows; y++) {
+  for (let x = 0; x < cols; x++) {
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    ctx.fillText(char, x * cellWidth, y * cellHeight);
+  }
+}
+```
+
+That can easily be tens of thousands of `fillText` calls per second. It’s fine for *some* effects, but not for “animate the entire viewport forever” on a wide range of devices.
+
+### Why WebGL is better
+
+WebGL shifts the steady-state work to the GPU. Instead of drawing glyphs one-by-one on the CPU, I:
+
+1. Pre-render all characters to a texture atlas once
+2. Upload vertex data describing where each character goes
+3. Let the GPU render everything in a single draw call
+
+```typescript
+// Build character atlas once at init
+for (let i = 0; i < charSet.length; i++) {
+  ctx.fillText(charSet[i], i * charWidth, 0);
+}
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlasCanvas);
+
+// Each frame: just update positions and draw
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+gl.drawArrays(gl.TRIANGLES, 0, vertexCount);
+```
+
+The GPU is built for this: lots of textured quads, fast. The practical result for me was less main-thread time, smoother animation, and fewer “this is melting my phone” moments.
+
+### Where AI helped (and didn't)
+
+I used Claude to help implement both renderers. Here's what worked well:
+
+**AI excels at:**
+- Boilerplate generation (shader setup, buffer creation, uniform binding)
+- Translating algorithms between paradigms (Canvas 2D effect → WebGL equivalent)
+- Spotting missed edge cases ("what if the character isn't in the atlas?")
+- Refactoring large code blocks into cleaner patterns
+
+**AI struggles with:**
+- Visual debugging—you can't show it what the glitch looks like
+- Performance intuition—it'll suggest valid code that's slow without knowing *why* it matters
+- GPU-specific gotchas (texture filtering, premultiplied alpha, coordinate systems)
+
+The matrix rain effect is a good example. The AI correctly generated the WebGL structure, but the falling "head" of each column was at the wrong position—it rendered the brightest character at the top instead of the bottom. Describing that visually took several attempts. In the end, I had to be very explicit:
+
+> "The trail is falling downward. The last character in the array (`j === trailLength - 1`) is the leading edge. Make that one brightest."
+
+Once stated precisely, the fix was trivial:
+
+```typescript
+const headIndex = trailLength - 1;
+const brightness = j / trailLength; // 0 at tail, 1 at head
+const isHead = j === headIndex;
+```
+
+The lesson: AI accelerates the mechanical parts of graphics programming but still needs a human eye to validate that the output *looks right*. Use it for scaffolding and iteration, not as a replacement for understanding the render pipeline.

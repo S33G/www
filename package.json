@@ -28,7 +28,6 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "sharp": "^0.34.5",
-    "three": "^0.182.0",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
@@ -37,7 +36,6 @@
     "@types/node": "^25.0.9",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.182.0",
     "@typescript-eslint/parser": "^8.53.1",
     "eslint": "^9.39.2",
     "eslint-plugin-astro": "^1.5.0",

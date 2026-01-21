@@ -1,6 +1,6 @@
 ---
 import type { EffectType } from '@/lib/ascii';
-import ASCIIBackground from './ASCIIBackground';
+import ASCIIBackgroundWrapper from './ASCIIBackgroundWrapper';
 
 interface Props {
   effect?: EffectType;
@@ -9,7 +9,7 @@ interface Props {
 const { effect = 'wave' } = Astro.props;
 ---
 
-<ASCIIBackground client:load effect={effect} />
+<ASCIIBackgroundWrapper client:only="react" effect={effect} />
 
 <style is:global>
   .ascii-background {
@@ -22,6 +22,20 @@ const { effect = 'wave' } = Astro.props;
     pointer-events: none;
     opacity: 0.6;
     transition: opacity 0.3s ease;
+  }
+
+  .ascii-fps {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    letter-spacing: 0.02em;
   }
 
   @media (prefers-reduced-motion: reduce) {

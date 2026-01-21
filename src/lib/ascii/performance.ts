@@ -22,19 +22,19 @@ export const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
     cellSize: 20,
     effectsEnabled: false,
     maxParticles: 25,
-    updateInterval: 66, // ~15fps
+    updateInterval: 16, // ~60fps
   },
   medium: {
     cellSize: 16,
     effectsEnabled: true,
     maxParticles: 50,
-    updateInterval: 50, // ~20fps
+    updateInterval: 16, // ~60fps
   },
   high: {
     cellSize: 12,
     effectsEnabled: true,
     maxParticles: 100,
-    updateInterval: 33, // ~30fps
+    updateInterval: 16, // ~60fps
   },
   ultra: {
     cellSize: 10,

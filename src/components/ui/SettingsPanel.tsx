@@ -17,7 +17,7 @@ export default function SettingsPanel() {
   // Initialize with defaults to avoid hydration mismatch
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFERENCES);
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const prefsRef = useRef(prefs);
   prefsRef.current = prefs;
 
@@ -31,6 +31,7 @@ export default function SettingsPanel() {
         speed: p.speed,
         intensity: p.intensity,
         color: COLOR_THEMES[p.colorTheme].primary,
+        showFps: p.showFps,
       }
     }));
   };
@@ -129,7 +130,6 @@ export default function SettingsPanel() {
   ];
 
   const effects: { value: EffectType }[] = [
-    { value: 'none' },
     { value: 'wave' },
     { value: 'matrix' },
     { value: 'pulse' },
@@ -255,6 +255,15 @@ export default function SettingsPanel() {
             <label className="toggle-label">
               <span className="toggle-text">Auto-cycle effects</span>
               <div className={`toggle ${prefs.autoCycle ? 'active' : ''}`} onClick={() => updatePreference('autoCycle', !prefs.autoCycle)}>
+                <div className="toggle-thumb" />
+              </div>
+            </label>
+          </div>
+
+          <div className="setting-section">
+            <label className="toggle-label">
+              <span className="toggle-text">Show FPS</span>
+              <div className={`toggle ${prefs.showFps ? 'active' : ''}`} onClick={() => updatePreference('showFps', !prefs.showFps)}>
                 <div className="toggle-thumb" />
               </div>
             </label>
@@ -392,6 +401,10 @@ export default function SettingsPanel() {
 
         .setting-section:nth-child(6) {
           animation-delay: 0.3s;
+        }
+
+        .setting-section:nth-child(7) {
+          animation-delay: 0.35s;
         }
 
         @keyframes slideInUp {

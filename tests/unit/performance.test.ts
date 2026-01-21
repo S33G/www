@@ -18,15 +18,17 @@ describe('Performance Module', () => {
       expect(QUALITY_PRESETS.ultra).toBeDefined();
     });
 
-    it('low quality has largest cell size and longest interval', () => {
+    it('low quality has largest cell size and 60fps interval', () => {
       expect(QUALITY_PRESETS.low.cellSize).toBeGreaterThan(QUALITY_PRESETS.medium.cellSize);
-      expect(QUALITY_PRESETS.low.updateInterval).toBeGreaterThan(QUALITY_PRESETS.medium.updateInterval);
+      expect(QUALITY_PRESETS.low.updateInterval).toBe(16);
+      expect(QUALITY_PRESETS.medium.updateInterval).toBe(16);
       expect(QUALITY_PRESETS.low.effectsEnabled).toBe(false);
     });
 
-    it('ultra quality has smallest cell size and shortest interval', () => {
+    it('ultra quality has smallest cell size and 60fps interval', () => {
       expect(QUALITY_PRESETS.ultra.cellSize).toBeLessThan(QUALITY_PRESETS.high.cellSize);
-      expect(QUALITY_PRESETS.ultra.updateInterval).toBeLessThanOrEqual(QUALITY_PRESETS.high.updateInterval);
+      expect(QUALITY_PRESETS.high.updateInterval).toBe(16);
+      expect(QUALITY_PRESETS.ultra.updateInterval).toBe(16);
       expect(QUALITY_PRESETS.ultra.effectsEnabled).toBe(true);
     });
   });

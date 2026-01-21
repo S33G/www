@@ -10,39 +10,31 @@ export default defineConfig({
   site: 'https://s33g.dev',
   output: 'static',
   integrations: [
-    react(),
+    // mermaid must be first to process diagrams before MDX
     mermaid({
-      themeVariables: {
-        primaryColor: '#1a1a1a',
-        primaryBorderColor: '#10b981',
-        primaryTextColor: '#f5f5f5',
-        primaryBorderWidth: '2px',
-        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        tertiaryColor: '#252525',
-        tertiaryBorderColor: '#10b981',
-        tertiaryTextColor: '#10b981',
-        edgeLabelBackground: {
-          color: 'transparent',
+      theme: 'dark',
+      autoTheme: true,
+      mermaidConfig: {
+        themeVariables: {
+          primaryColor: '#1a1a1a',
+          primaryBorderColor: '#10b981',
+          primaryTextColor: '#f5f5f5',
+          lineColor: '#10b981',
+          fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          tertiaryColor: '#252525',
+          secondaryColor: '#252525',
+        },
+        flowchart: {
+          curve: 'basis',
         },
       },
-      logLevel: 'error',
     }),
+    react(),
     mdx({
       syntaxHighlight: 'shiki',
       shikiConfig: { theme: 'github-dark' },
     }),
     sitemap(),
   ],
-  vite: {
-    build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            three: ['three'],
-          },
-        },
-      },
-    },
-  },
   prefetch: { prefetchAll: true },
 });

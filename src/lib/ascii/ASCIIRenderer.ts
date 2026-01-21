@@ -6,6 +6,7 @@ import {
   isPageVisible,
   getRecommendedQuality,
   type QualityLevel,
+  type PerformanceMetrics,
 } from './performance';
 
 export interface ASCIIRendererConfig {
@@ -43,6 +44,11 @@ export class ASCIIRenderer {
   private lastFrameTime: number = 0;
   private frameInterval: number = 33; // Default ~30fps
   private currentQuality: QualityLevel = 'medium';
+  private lastMetrics: PerformanceMetrics = {
+    fps: 0,
+    frameTime: 0,
+    quality: 'medium',
+  };
 
   // Intensity tween state
   private targetIntensity: number = 0.6;
@@ -77,10 +83,23 @@ export class ASCIIRenderer {
   // Mouse trail for glitch effect
   private mouseTrail: { x: number; y: number; time: number }[] = [];
 
+  // Mouse throttling (30fps max)
+  private lastMouseUpdate: number = 0;
+  private mouseThrottleInterval: number = 33; // ~30fps
+
+  // Character atlas for faster rendering (drawImage vs fillText)
+  private charAtlas: OffscreenCanvas | null = null;
+  private charAtlasCtx: OffscreenCanvasRenderingContext2D | null = null;
+  private atlasCharWidth: number = 0;
+  private atlasCharHeight: number = 0;
+  private currentAtlasColor: string = '';
+  private matrixAtlas: OffscreenCanvas | null = null;
+  private matrixAtlasCtx: OffscreenCanvasRenderingContext2D | null = null;
+
   // Intro animation state
   private introActive: boolean = true;
   private introStartTime: number = 0;
-  private introDuration: number = 2500; // Total intro duration in ms
+  private introDuration: number = 1000; // Total intro duration in ms
   private introColumnDelays: number[] = []; // Random delay per column for staggered effect
 
   triggerExplosion(x: number, y: number): void {
@@ -316,6 +335,11 @@ export class ASCIIRenderer {
   };
 
   private handleMouseMove = (e: MouseEvent): void => {
+    // Throttle mouse updates to 30fps max
+    const now = performance.now();
+    if (now - this.lastMouseUpdate < this.mouseThrottleInterval) return;
+    this.lastMouseUpdate = now;
+
     const rect = this.canvas.getBoundingClientRect();
     this.mouseX = (e.clientX - rect.left) / rect.width;
     this.mouseY = (e.clientY - rect.top) / rect.height;
@@ -378,6 +402,96 @@ export class ASCIIRenderer {
     return chars;
   }
 
+  /**
+   * Build character atlas for faster rendering with drawImage instead of fillText
+   */
+  private buildCharAtlas(color: string, fontSize: number): void {
+    // Skip if atlas is already built for this color and size
+    if (this.charAtlas && this.currentAtlasColor === color &&
+        this.atlasCharHeight === fontSize) {
+      return;
+    }
+
+    this.currentAtlasColor = color;
+    this.atlasCharWidth = Math.ceil(fontSize * 0.6);
+    this.atlasCharHeight = fontSize;
+
+    // Build main character set atlas
+    const charCount = this.charSet.length;
+    const atlasWidth = charCount * this.atlasCharWidth;
+
+    this.charAtlas = new OffscreenCanvas(atlasWidth, this.atlasCharHeight);
+    this.charAtlasCtx = this.charAtlas.getContext('2d');
+
+    if (this.charAtlasCtx) {
+      this.charAtlasCtx.font = `${fontSize}px monospace`;
+      this.charAtlasCtx.textBaseline = 'top';
+      this.charAtlasCtx.fillStyle = color;
+
+      for (let i = 0; i < charCount; i++) {
+        this.charAtlasCtx.fillText(
+          this.charSet[i],
+          i * this.atlasCharWidth,
+          0
+        );
+      }
+    }
+
+    // Build matrix character set atlas
+    const matrixChars = CHAR_SETS.matrix;
+    const matrixAtlasWidth = matrixChars.length * this.atlasCharWidth;
+
+    this.matrixAtlas = new OffscreenCanvas(matrixAtlasWidth, this.atlasCharHeight);
+    this.matrixAtlasCtx = this.matrixAtlas.getContext('2d');
+
+    if (this.matrixAtlasCtx) {
+      this.matrixAtlasCtx.font = `${fontSize}px monospace`;
+      this.matrixAtlasCtx.textBaseline = 'top';
+      this.matrixAtlasCtx.fillStyle = color;
+
+      for (let i = 0; i < matrixChars.length; i++) {
+        this.matrixAtlasCtx.fillText(
+          matrixChars[i],
+          i * this.atlasCharWidth,
+          0
+        );
+      }
+    }
+  }
+
+  /**
+   * Draw a character from the atlas (faster than fillText)
+   */
+  private drawCharFromAtlas(
+    char: string,
+    x: number,
+    y: number,
+    alpha: number,
+    useMatrixAtlas: boolean = false
+  ): void {
+    const atlas = useMatrixAtlas ? this.matrixAtlas : this.charAtlas;
+    const charSetToUse = useMatrixAtlas ? CHAR_SETS.matrix : this.charSet;
+
+    if (!atlas || alpha <= 0.01) return;
+
+    const charIndex = charSetToUse.indexOf(char);
+    if (charIndex === -1) {
+      // Fallback to fillText for unknown characters
+      this.ctx.globalAlpha = alpha;
+      this.ctx.fillText(char, x, y);
+      return;
+    }
+
+    const srcX = charIndex * this.atlasCharWidth;
+
+    this.ctx.globalAlpha = alpha;
+    this.ctx.drawImage(
+      atlas,
+      srcX, 0, this.atlasCharWidth, this.atlasCharHeight,
+      x, y, this.atlasCharWidth, this.atlasCharHeight
+    );
+  }
+
   start(): void {
     this.isRunning = true;
     this.introActive = true;
@@ -425,7 +539,7 @@ export class ASCIIRenderer {
     }
     this.lastFrameTime = now - (elapsed % this.frameInterval);
 
-    this.performanceMonitor.tick();
+    this.lastMetrics = this.performanceMonitor.tick();
     const quality = this.performanceMonitor.checkAndAdapt();
 
     // Update frame interval if quality changed
@@ -441,6 +555,10 @@ export class ASCIIRenderer {
     this.updateIntensityTween();
     this.render();
   };
+
+  getPerformanceMetrics(): PerformanceMetrics {
+    return this.lastMetrics;
+  }
 
   private render(): void {
     // Update transition progress
@@ -462,6 +580,9 @@ export class ASCIIRenderer {
     const effectiveFontSize = this.currentQuality === 'low'
       ? Math.max(this.fontSize, 18)
       : this.fontSize;
+
+    // Build character atlas if needed (uses drawImage instead of fillText for speed)
+    this.buildCharAtlas(this.color, effectiveFontSize);
 
     this.ctx.font = `${effectiveFontSize}px monospace`;
     this.ctx.textBaseline = 'top';
@@ -532,55 +653,65 @@ export class ASCIIRenderer {
   }
 
   private renderMatrix(): void {
-    // Parse current color to RGB
-    const rgb = this.hexToRgb(this.color);
-
     for (let i = 0; i < this.matrixColumns.length; i++) {
       const col = this.matrixColumns[i];
+      const trailLength = col.chars.length;
+      const headIndex = trailLength - 1; // Last char is the falling head
 
-      for (let j = 0; j < col.chars.length; j++) {
+      for (let j = 0; j < trailLength; j++) {
         const y = Math.floor(col.y) + j;
         if (y < 0 || y >= this.rows) continue;
 
-        // Brightness fade
-        const brightness = 1 - j / col.chars.length;
+        // Brightness: head (last char, j = headIndex) is brightest, tail (j = 0) is dimmest
+        const brightness = j / trailLength;
+        const isHead = j === headIndex;
 
         let baseAlpha;
-        if (j === 0) {
-           baseAlpha = 0.9 * this.intensity;
+        if (isHead) {
+          baseAlpha = 0.95 * this.intensity;
         } else {
-           baseAlpha = brightness * 0.6 * this.intensity;
+          baseAlpha = brightness * 0.6 * this.intensity;
+        }
+
+        // Mouse glow effect - characters near mouse glow brighter
+        const nx = i / this.cols;
+        const ny = y / this.rows;
+        const mouseDist = Math.sqrt((nx - this.mouseX) ** 2 + (ny - this.mouseY) ** 2);
+        const mouseRadius = 0.15;
+        if (mouseDist < mouseRadius) {
+          const glowStrength = (1 - mouseDist / mouseRadius) * 0.4;
+          baseAlpha = Math.min(1, baseAlpha + glowStrength * this.intensity);
         }
 
         const { x: drawX, y: drawY, alpha: finalAlpha } = this.applyExplosionEffect(i, y, baseAlpha);
 
         if (finalAlpha <= 0.01) continue;
 
-        // Head of column is white
-        if (j === 0) {
-          this.ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`;
-        } else {
-          this.ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${finalAlpha})`;
-        }
-
-        // Random char change
-        if (Math.random() < 0.02) {
+        // Random char change - more frequent near head
+        const changeChance = isHead ? 0.08 : 0.02;
+        if (Math.random() < changeChance) {
           col.chars[j] = CHAR_SETS.matrix[Math.floor(Math.random() * CHAR_SETS.matrix.length)];
         }
 
-        this.ctx.fillText(col.chars[j], drawX, drawY);
+        // Head of column (falling tip) is white, rest use atlas
+        if (isHead) {
+          this.ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`;
+          this.ctx.fillText(col.chars[j], drawX, drawY);
+        } else {
+          this.drawCharFromAtlas(col.chars[j], drawX, drawY, finalAlpha, true);
+        }
       }
 
       col.y += col.speed * this.speed;
-      if (col.y > this.rows + col.chars.length) {
-        col.y = -col.chars.length;
+      if (col.y > this.rows + trailLength) {
+        col.y = -trailLength;
         col.speed = Math.random() * 0.5 + 0.3;
       }
     }
+    this.ctx.globalAlpha = 1;
   }
 
   private renderWave(): void {
-    const rgb = this.hexToRgb(this.color);
     // Skip cells at low quality for better performance
     const skip = this.currentQuality === 'low' ? 2 : 1;
 
@@ -608,14 +739,14 @@ export class ASCIIRenderer {
         const { x: drawX, y: drawY, alpha: finalAlpha } = this.applyExplosionEffect(x, y, alpha);
         if (finalAlpha <= 0.01) continue;
 
-        this.ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${finalAlpha})`;
-        this.ctx.fillText(char, drawX, drawY);
+        // Use atlas for faster rendering
+        this.drawCharFromAtlas(char, drawX, drawY, finalAlpha);
       }
     }
+    this.ctx.globalAlpha = 1;
   }
 
   private renderPulse(): void {
-    const rgb = this.hexToRgb(this.color);
     const pulse = (Math.sin(this.time * 2) + 1) / 2;
     const skip = this.currentQuality === 'low' ? 2 : 1;
 
@@ -624,13 +755,26 @@ export class ASCIIRenderer {
     const cy = this.rows / 2;
     const maxDist = Math.sqrt(cx ** 2 + cy ** 2);
 
+    // Mouse position in grid coordinates
+    const mx = this.mouseX * this.cols;
+    const my = this.mouseY * this.rows;
+
     for (let y = 0; y < this.rows; y += skip) {
       for (let x = 0; x < this.cols; x += skip) {
+        // Center pulse
         const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
         const normDist = dist / maxDist;
-
         const ring = Math.sin(normDist * 10 - this.time * 3);
-        const value = (ring + 1) / 2 * (1 - normDist * 0.5) * (0.5 + pulse * 0.5);
+        let value = (ring + 1) / 2 * (1 - normDist * 0.5) * (0.5 + pulse * 0.5);
+
+        // Mouse pulse - secondary rings emanate from cursor
+        const mouseDist = Math.sqrt((x - mx) ** 2 + (y - my) ** 2);
+        const mouseNormDist = mouseDist / (maxDist * 0.5);
+        if (mouseNormDist < 1) {
+          const mouseRing = Math.sin(mouseNormDist * 8 - this.time * 4);
+          const mouseValue = (mouseRing + 1) / 2 * (1 - mouseNormDist) * 0.5;
+          value = Math.max(value, mouseValue);
+        }
 
         const charIndex = Math.floor(value * (this.charSet.length - 1));
         const char = this.charSet[Math.min(charIndex, this.charSet.length - 1)];
@@ -640,10 +784,11 @@ export class ASCIIRenderer {
         const { x: drawX, y: drawY, alpha: finalAlpha } = this.applyExplosionEffect(x, y, alpha);
         if (finalAlpha <= 0.01) continue;
 
-        this.ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${finalAlpha})`;
-        this.ctx.fillText(char, drawX, drawY);
+        // Use atlas for faster rendering
+        this.drawCharFromAtlas(char, drawX, drawY, finalAlpha);
       }
     }
+    this.ctx.globalAlpha = 1;
   }
 
   private updateMouseTrail(): void {
@@ -654,8 +799,8 @@ export class ASCIIRenderer {
         Math.abs(this.mouseTrail[this.mouseTrail.length - 1].y - this.mouseY) > 0.01) {
       this.mouseTrail.push({ x: this.mouseX, y: this.mouseY, time: now });
     }
-    // Keep trail to max 30 points and remove old ones (older than 1.5s)
-    this.mouseTrail = this.mouseTrail.filter(p => now - p.time < 1500).slice(-30);
+    // Keep trail to max 15 points and remove old ones (older than 1s)
+    this.mouseTrail = this.mouseTrail.filter(p => now - p.time < 1000).slice(-15);
   }
 
   private renderGlitch(): void {
