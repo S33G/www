@@ -17,6 +17,12 @@
       "name": "github-fork-manager",
       "featured": true,
       "description": "A terminal-first tool for cleaning up forks safely at scale"
+    },
+    {
+      "owner": "s33g",
+      "name": "bpm-tool",
+      "featured": true,
+      "description": "A web calculator for BPM to ms/Hz, plus swing, groove, MIDI export, and a tiny synth to audition feel"
     }
   ]
 }
