@@ -25,9 +25,9 @@ const { effect = 'wave' } = Astro.props;
   }
 
   .ascii-fps {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
+    position: fixed;
+    top: calc(0.75rem + env(safe-area-inset-top, 0px) + var(--ascii-fps-offset, 0px));
+    left: calc(0.75rem + env(safe-area-inset-left, 0px));
     font-family: var(--font-mono);
     font-size: 0.7rem;
     color: var(--text-muted);

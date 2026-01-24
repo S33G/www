@@ -1,0 +1,120 @@
+---
+title: 'Introducing: GrooveLab'
+description: 'How I rebranded a personal music utility while experimenting with generative AI in my programming workflow.'
+pubDate: 2026-01-24
+tags: ['tools', 'music', 'llm', 'workflow']
+---
+
+I started this repo as “bpm tool” because I needed tempo math fast, while producing music. It didn’t stay a calculator for long.
+
+This post is also a dry-run of my current LLM-assisted programming loop: use models to pressure-test scope, then use a local coder model to grind through implementation while I stay focused on product shape and correctness.
+
+## What it does
+
+GrooveLab is a small, browser-based toolbox for timing + basic theory work:
+
+- **Tempo math:** BPM → milliseconds (note values, delay times) + tap tempo
+- **Timekeeping:** metronome + rhythm grid
+- **Groove tools:** swing utilities + MIDI export
+- **Theory helpers:** fretboard + key finder + pitch analyzer
+- **Session glue:** setlist builder (stored locally, exportable)
+
+The details are still evolving, but the point is stable: it’s the stuff musicians reach for while writing/recording, packaged into one place.
+
+## The evolution (bpm tool → tunetool → GrooveLab)
+
+The history is pretty literal in the commit log:
+
+- `0925a62` Bpm tool -> tunetool
+- `2b75cd0` tunetool -> GrooveLab
+
+That middle name (“tunetool”) was me realizing the scope was no longer tempo-only, but also not having a clean product shape yet.
+
+“GrooveLab” is the reset: timing + groove + a little bit of harmony under one coherent umbrella.
+
+One concrete “this is a rebrand, not just a title” change was namespacing storage keys so the app’s state is clearly owned by GrooveLab:
+
+```ts
+// src/lib/constants.ts
+export const STORAGE_KEYS = {
+  BOOKMARKS: 'groovelab-bookmarks',
+  THEME: 'groovelab-theme',
+  LAST_BPM: 'groovelab-last-bpm',
+  SETLISTS: 'groovelab-setlists',
+} as const
+```
+
+That’s a breaking change for existing local data, but acceptable for a personal tool at this stage. If I cared about migration, I’d add a one-time key copy on boot.
+
+My reason for highlighting this is that this kind of problem is not always caught by an LLM-assisted workflow. We (humans) are still responsible for thinking through product implications.
+
+## The workflow experiment (this was the point)
+
+I wanted to test an LLM loop where I separate **product ideation** from **implementation**.
+
+The flow that worked for me:
+
+1. **Exploration:** use a general model to propose features and UX flows (what exists, how it connects, what “done” means).
+2. **Spec prompt:** rewrite that into a single prompt that’s consistent and testable.
+3. **Implementation:** hand the spec to a locally hosted coder model (Qwen3-coder via Ollama) and iterate: generate code → run it → fix sharp edges → repeat.
+4. **Review pass:** do a final “read this like a cranky senior engineer” review (I used Opus for this), then tighten UX and remove weirdness.
+
+The big takeaway: the win wasn’t “AI wrote the code”. The win was getting to a stable scope quickly, then letting a local model chew through the mechanical work while I stayed focused on correctness and product feel.
+
+## The prompt mattered more than the model
+
+The single biggest lever was getting the prompt right *up front*.
+
+When the spec prompt was vague (“make a music toolbox”), the implementation drifted immediately:
+
+- inconsistent naming (features, pages, storage)
+- UX that looked fine in isolation but didn’t compose
+- scope creep (“while we’re here, add…”) that never converged
+
+When the spec prompt was concrete, the coder model stayed on rails. The structure that made the difference:
+
+- **Purpose:** what problem this solves *in a session*
+- **Non-goals:** what not to build (accounts, cloud sync, etc.)
+- **Feature list:** explicit, finite, and prioritized
+- **Data + persistence:** what’s stored, where, and key names
+- **Definition of done:** what “finished” means for this iteration
+
+Here’s the kind of snippet I ended up using to anchor the model (not the exact prompt, just the shape):
+
+```text
+Build GrooveLab: a browser-based timing + groove toolbox.
+
+Goals:
+- Fast tempo math + metronome + groove utilities
+- Local-only persistence (no accounts)
+
+Non-goals:
+- No backend, no login, no cloud sync
+
+Constraints:
+- Keep features as small, separate tools
+- Namespace localStorage keys (groovelab-*)
+
+Done means:
+- Each tool works end-to-end
+- State persists reliably across reloads
+```
+
+I’m not saying “prompts are everything.” I am saying: if you spend the time to make the prompt a real spec, you get way fewer weird surprises later.
+
+## What I learned
+
+- Prompting is product work. If the spec is fuzzy, you’ll pay for it in debugging.
+- Local coder models shine when the task is well-bounded and you can run the loop fast.
+- “One more feature” is the enemy of finishing. Write the non-goals down.
+
+If you make music and you want a tight, no-drama set of timing + groove utilities, you’re welcome to use my new tool, GrooveLab. I hope it helps you stay in flow and spend more time making music.
+
+---
+
+## Try it out
+
+- **Live tool:** [groovelab.s33g.uk](https://groovelab.s33g.uk)
+- **Source code:** [github.com/S33G/groovelab](https://github.com/S33G/groovelab)
+
+Found a bug? Have a feature request or workflow idea? Open an issue or PR on [GitHub](https://github.com/S33G/groovelab/issues). I read feedback and iterate fast.

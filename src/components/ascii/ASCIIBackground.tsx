@@ -207,6 +207,23 @@ export default function ASCIIBackground({ effect: initialEffect = 'wave' }: ASCI
     setShowFps(Boolean(prefs.showFps));
   }, []);
 
+  useEffect(() => {
+    const updateFpsOffset = () => {
+      const nav = document.querySelector<HTMLElement>('.navigation');
+      const height = nav ? nav.getBoundingClientRect().height : 0;
+      document.documentElement.style.setProperty('--ascii-fps-offset', `${height}px`);
+    };
+
+    updateFpsOffset();
+    window.addEventListener('resize', updateFpsOffset);
+    document.addEventListener('astro:after-swap', updateFpsOffset);
+
+    return () => {
+      window.removeEventListener('resize', updateFpsOffset);
+      document.removeEventListener('astro:after-swap', updateFpsOffset);
+    };
+  }, []);
+
   // React to reduced motion changes
   useEffect(() => {
     const r = rendererRef.current;
