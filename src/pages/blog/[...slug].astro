@@ -4,21 +4,45 @@ import PostLayout from '@/layouts/PostLayout.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
+  return sortedPosts.map((post, index) => {
+    const prevPost = sortedPosts[index + 1];
+    const nextPost = sortedPosts[index - 1];
+    const tags = post.data.tags ?? [];
+    const similarPosts = sortedPosts
+      .filter((candidate) => {
+        if (candidate.slug === post.slug) return false;
+        const candidateTags = candidate.data.tags ?? [];
+        return candidateTags.some((tag) => tags.includes(tag));
+      })
+      .slice(0, 3);
+
+    return {
+      params: { slug: post.slug },
+      props: { post, prevPost, nextPost, similarPosts },
+    };
+  });
 }
 
 interface Props {
   post: CollectionEntry<'blog'>;
+  prevPost?: CollectionEntry<'blog'>;
+  nextPost?: CollectionEntry<'blog'>;
+  similarPosts?: CollectionEntry<'blog'>[];
 }
 
-const { post } = Astro.props;
+const { post, prevPost, nextPost, similarPosts = [] } = Astro.props;
 const { Content } = await post.render();
 ---
 
-<PostLayout frontmatter={post.data}>
+<PostLayout
+  frontmatter={post.data}
+  backHref="/blog"
+  backLabel="Back to posts"
+  prevPost={prevPost}
+  nextPost={nextPost}
+  similarPosts={similarPosts}
+>
   <Content />
 </PostLayout>

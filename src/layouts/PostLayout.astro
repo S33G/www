@@ -2,8 +2,10 @@
 import BaseLayout from './BaseLayout.astro';
 import Navigation from '@/components/ui/Navigation.astro';
 import PostTitle from '@/components/content/PostTitle.astro';
+import PostCard from '@/components/content/PostCard.astro';
 import ASCIIBackground from '@/components/ascii/ASCIIBackground.astro';
 import { formatDate } from '@/lib/utils';
+import type { CollectionEntry } from 'astro:content';
 
 interface Props {
   frontmatter: {
@@ -14,9 +16,23 @@ interface Props {
     tags?: string[];
     image?: string;
   };
+  similarPosts?: CollectionEntry<'blog'>[];
+  prevPost?: CollectionEntry<'blog'>;
+  nextPost?: CollectionEntry<'blog'>;
+  backHref?: string;
+  backLabel?: string;
 }
 
-const { frontmatter } = Astro.props;
+const {
+  frontmatter,
+  similarPosts = [],
+  prevPost,
+  nextPost,
+  backHref = '/blog',
+  backLabel = 'Back to posts',
+} = Astro.props;
+const prevHref = prevPost ? `/blog/${prevPost.slug}` : '';
+const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
 ---
 
 <BaseLayout
@@ -34,7 +50,13 @@ const { frontmatter } = Astro.props;
     <Navigation />
 
     <main id="main-content">
-      <article class="post" transition:animate="fade">
+      <article
+        class="post"
+        transition:animate="fade"
+        data-post-navigation
+        data-prev={prevHref}
+        data-next={nextHref}
+      >
         <header class="post-header">
           <a href="/blog" class="back-link">← Back to posts</a>
           <PostTitle title={frontmatter.title} />
@@ -62,6 +84,22 @@ const { frontmatter } = Astro.props;
         </div>
 
         <footer class="post-footer">
+          {similarPosts.length > 0 && (
+            <section class="similar-posts">
+              <h2>Similar posts</h2>
+              <div class="similar-posts-grid">
+                {similarPosts.map((post) => (
+                  <PostCard
+                    slug={post.slug}
+                    title={post.data.title}
+                    description={post.data.description}
+                    pubDate={post.data.pubDate}
+                    tags={post.data.tags}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
           <a href="/blog" class="back-link">← Back to all posts</a>
         </footer>
       </article>
@@ -91,6 +129,35 @@ const { frontmatter } = Astro.props;
     border-radius: var(--border-radius);
     padding: var(--space-xl);
     box-shadow: var(--shadow-md);
+    position: relative;
+  }
+
+  .content-back-button {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .content-back-button:hover,
+  .content-back-button:focus-visible {
+    background: var(--ascii-tint);
+    border-color: var(--border-hover);
+    color: var(--color-primary);
   }
 
   :global([data-astro-transition="fade"]) {
@@ -205,6 +272,21 @@ const { frontmatter } = Astro.props;
     border-top: 1px solid var(--border-color);
   }
 
+  .similar-posts {
+    margin-bottom: var(--space-xl);
+  }
+
+  .similar-posts h2 {
+    font-size: var(--font-size-lg);
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+  }
+
+  .similar-posts-grid {
+    display: grid;
+    gap: var(--space-md);
+  }
+
   .back-link {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
@@ -227,6 +309,14 @@ const { frontmatter } = Astro.props;
       padding: var(--space-lg);
       border-radius: var(--border-radius-sm);
     }
+
+    .content-back-button {
+      top: var(--space-xs);
+      right: var(--space-xs);
+      width: 2rem;
+      height: 2rem;
+      font-size: 0.7rem;
+    }
   }
 
   @media (max-width: 480px) {
@@ -237,3 +327,48 @@ const { frontmatter } = Astro.props;
     }
   }
 </style>
+
+<script>
+  function setupPostNavigation() {
+    const post = document.querySelector('[data-post-navigation]');
+    if (!post) return;
+
+    const prev = post.getAttribute('data-prev') || '';
+    const next = post.getAttribute('data-next') || '';
+    if (!prev && !next) return;
+
+    const onKeyDown = (event) => {
+      if (event.defaultPrevented) return;
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const tagName = target.tagName;
+      if (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(tagName)) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft' && prev) {
+        window.location.href = prev;
+      }
+
+      if (event.key === 'ArrowRight' && next) {
+        window.location.href = next;
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+
+    const teardown = () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+
+    document.addEventListener('astro:before-swap', teardown, { once: true });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupPostNavigation, { once: true });
+  } else {
+    setupPostNavigation();
+  }
+
+  document.addEventListener('astro:after-swap', setupPostNavigation);
+</script>

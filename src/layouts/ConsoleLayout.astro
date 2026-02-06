@@ -6,9 +6,11 @@ import ASCIIBackground from '@/components/ascii/ASCIIBackground.astro';
 interface Props {
   title: string;
   description?: string;
+  backHref?: string;
+  backLabel?: string;
 }
 
-const { title, description } = Astro.props;
+const { title, description, backHref = '/', backLabel = 'Back to home' } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -47,6 +49,35 @@ const { title, description } = Astro.props;
     border-radius: var(--border-radius);
     padding: var(--space-lg);
     box-shadow: var(--shadow-md);
+    position: relative;
+  }
+
+  .content-back-button {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    width: 2.25rem;
+    height: 2.25rem;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .content-back-button:hover,
+  .content-back-button:focus-visible {
+    background: var(--ascii-tint);
+    border-color: var(--border-hover);
+    color: var(--color-primary);
   }
 
   :global([data-astro-transition="fade"]) {
@@ -72,6 +103,14 @@ const { title, description } = Astro.props;
     .content-wrapper {
       padding: var(--space-md);
       border-radius: var(--border-radius-sm);
+    }
+
+    .content-back-button {
+      top: var(--space-xs);
+      right: var(--space-xs);
+      width: 2rem;
+      height: 2rem;
+      font-size: 0.7rem;
     }
   }
 

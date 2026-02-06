@@ -44,7 +44,7 @@
       "featured": true,
       "description": "TUI for listing your GitHub forks, multi-selecting, and safely bulk-deleting with confirmation and logging",
       "language": "Go",
-      "blogTag": "tools"
+      "blogTag": "gfm"
     },
     {
       "owner": "S33G",
@@ -52,7 +52,7 @@
       "featured": true,
       "description": "GrooveLab is a modern, musician-friendly toolbox for timing and theory work. Includes BPM tools, groove quantization, rhythm grids, chord and scale exploration.",
       "language": "TypeScript",
-      "blogTag": "tools"
+      "blogTag": "groovelab"
     },
     {
       "owner": "S33G",
