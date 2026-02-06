@@ -65,6 +65,10 @@ const currentPath = Astro.url.pathname;
     list-style: none;
     margin: 0;
     padding: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .nav-link {
@@ -91,10 +95,17 @@ const currentPath = Astro.url.pathname;
   @media (max-width: 640px) {
     .navigation {
       padding: var(--space-sm) var(--space-md);
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-xs);
     }
 
     .nav-links {
       gap: 0;
+      justify-content: center;
+      width: 100%;
+      position: static;
+      transform: none;
     }
 
     .nav-link {
