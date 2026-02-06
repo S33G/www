@@ -1,0 +1,328 @@
+---
+title: "YSX: A Delightfully Weird React Experiment"
+description: "A build-time transpiler experiment that lets you write React components in pure YAML format."
+pubDate: 2026-02-02
+tags: ['ysx', 'react', 'transpilation', 'experiments']
+---
+
+## What Happens When You Make React Declarative... in YAML?
+
+Have you ever looked at JSX and thought, "This is nice and all, but what if we made it... even *more* structured?" Well, meet **YSX** (YAML Syntax Extension) — a build-time transpiler that lets you write React components in pure YAML format.
+
+Let me be clear upfront: this is a silly experiment. It's delightfully, wonderfully silly. But it's also genuinely interesting from a language design perspective, and surprisingly functional.
+
+## The Core Idea
+
+Instead of writing:
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <h1>Counter Demo</h1>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}
+```
+
+You write:
+
+```yaml
+---
+name: Counter
+
+hooks:
+  - useState:
+      variable: count
+      initialValue: 0
+
+render:
+  div:
+    children:
+      - h1: Counter Demo
+      - p: "Count: {count}"
+      - button:
+          onClick: !!js |
+            () => setCount(count + 1)
+          children: Increment
+```
+
+Everything is there. The component structure, the hooks, the event handlers, the interpolation. Just in YAML form.
+
+## Why Is This Silly?
+
+1. **YAML is not a programming language** — It's a data serialization format. Using it to describe UI logic is like using TOML to write your business logic. Technically you *can*, but should you?
+
+2. **Event handlers feel awkward** — You need to embed JavaScript strings with the `!!js` tag. It's a workaround that highlights the impedance mismatch between data and code.
+
+3. **String interpolation looks weird** — `"Count: {count}"` works, but it's not native YAML syntax. It's a custom feature bolted on top.
+
+4. **No IDE support** — Your editor won't understand it the way it understands JSX. No intelligent autocomplete, no syntax highlighting beyond basic YAML.
+
+5. **It breaks the principle of locality** — Your component's logic is spread across different YAML sections (imports, hooks, render) rather than being co-located like it would be in a function.
+
+## Why?
+
+Because it's *interesting* (to some, I guess). Here's what makes YSX genuinely clever:
+
+### 1. **Zero Runtime Overhead**
+
+YSX is entirely build-time. It transpiles YAML to standard JSX/TSX using Babel AST generation. By the time your code runs, it's indistinguishable from hand-written React code.
+
+```javascript
+// This is all it takes:
+const { YSXParser, YSXTranspiler } = require('ysx-core');
+
+const yamlSource = /* ... */;
+const parser = new YSXParser();
+const transpiler = new YSXTranspiler();
+
+const ast = parser.parse(yamlSource);
+const jsxCode = transpiler.transpile(ast);
+```
+
+### 2. **Monorepo Architecture**
+
+The project is beautifully organized:
+
+- **ysx-core** — Parser (YAML → AST) and Transpiler (AST → JSX)
+- **ysx-loader** — Webpack/Vite integration for seamless development
+- **ysx-cli** — Command-line transpilation tool
+- **ysx-types** — TypeScript definitions for type safety
+
+This separation of concerns is textbook good design.
+
+### 3. **Proper Custom YAML Types**
+
+Rather than just string-parsing, YSX extends YAML's type system:
+
+```yaml
+# Custom tags for JS and TypeScript
+onClick: !!js |
+  () => console.log('clicked')
+
+typeHint: !!ts |
+  string | number
+```
+
+This is done cleanly using `js-yaml`'s type extension API, not hacky regex magic.
+
+### 4. **Surprisingly Complete Feature Set**
+
+Despite being an experiment, it handles:
+
+- ✅ Functional components with proper React imports
+- ✅ Hooks (useState, useEffect, and extensible for more)
+- ✅ Props and state management
+- ✅ Event handlers with arrow functions
+- ✅ String interpolation: `"Welcome, {props.username}!"`
+- ✅ Nested components and children arrays
+- ✅ Inline styles as YAML objects
+- ✅ Both default and named imports
+- ✅ Hot reload via webpack/vite loaders
+- ✅ TypeScript output option
+
+### 5. **Smart Babel Integration**
+
+The transpiler uses `@babel/types` and `@babel/generator` to produce syntactically correct JavaScript. It's not string concatenation — it's proper AST manipulation. You get:
+
+- Correct scoping
+- Proper identifier handling
+- Valid JSX elements
+- Proper import statements
+
+## Real Examples
+
+### Simple Button
+
+```yaml
+---
+version: 1.0
+name: SimpleButton
+
+render:
+  button:
+    onClick: !!js |
+      () => alert('Clicked!')
+    children: Click Me
+```
+
+Becomes:
+
+```jsx
+import React from 'react';
+
+function SimpleButton(props) {
+  return React.createElement('button', {
+    onClick: () => alert('Clicked!')
+  }, 'Click Me');
+}
+
+export default SimpleButton;
+```
+
+### Counter with State
+
+```yaml
+---
+name: App
+
+imports:
+- from: react
+  default: React
+  named: [ useState ]
+- from: ./App.css
+
+hooks:
+- useState:
+    variable: count
+    initialValue: 0
+
+render:
+  div:
+    className: App
+    children:
+    - header:
+        className: App-header
+        children:
+        - p:
+            children: "Count: {count}"
+        - button:
+            children: Increase
+            onClick: !!js |
+              () => setCount(count + 1)
+        - button:
+            children: Decrease
+            onClick: !!js |
+              () => setCount(count - 1)
+```
+
+This handles state initialization, string interpolation, event handlers, and nested components. All from YAML.
+
+## The Technical Highlights
+
+### Parser Design
+
+The parser extends YAML's schema with custom types:
+
+```javascript
+this.schema = yaml.DEFAULT_SCHEMA.extend([
+  new yaml.Type('tag:yaml.org,2002:js', {
+    kind: 'scalar',
+    construct: (data) => ({ type: 'JSExpression', code: data })
+  }),
+  new yaml.Type('tag:yaml.org,2002:ts', {
+    kind: 'scalar',
+    construct: (data) => ({ type: 'TSAnnotation', code: data })
+  })
+]);
+```
+
+Clean, extensible, and follows YAML standards.
+
+### Element Tree Building
+
+The transpiler recursively builds the element tree:
+
+```javascript
+buildElementTree(node) {
+  if (typeof node === 'string') {
+    return this.parseInterpolation(node);
+  }
+
+  if (Array.isArray(node)) {
+    return t.arrayExpression(
+      node.map(child => this.buildElementTree(child))
+    );
+  }
+
+  // Handle element nodes with tag name and config
+  const { children, ...attrs } = config;
+  const tagName = /^[A-Z]/.test(tag)
+    ? t.identifier(tag)           // Component
+    : t.stringLiteral(tag);       // HTML element
+
+  return t.callExpression(
+    t.memberExpression(
+      t.identifier('React'),
+      t.identifier('createElement')
+    ),
+    [tagName, this.buildProps(attrs), ...childNodes]
+  );
+}
+```
+
+This elegantly handles the nesting structure and distinguishes between React components (capital letter) and HTML elements.
+
+### String Interpolation
+
+The transpiler converts `"Count: {count}"` into proper template literals:
+
+```javascript
+parseInterpolation(str) {
+  const regex = /\{([^}]+)\}/g;
+  // ... extract expressions from curly braces
+
+  // Returns a template literal with expressions embedded
+  return t.templateLiteral(quasis, expressions);
+}
+```
+
+## Is This Usable?
+
+Technically? Yes. Would I recommend it for production? No. Here's why:
+
+**Cons:**
+- Debugging is harder (you're reading YAML, errors point to JSX)
+- Team familiarity (not everyone knows YAML)
+- Editor support is basically zero
+- Complex logic becomes unreadable quickly
+- You lose JSX's inline expressiveness
+
+**Pros:**
+- Genuinely declarative
+- Very structured (no room for bad patterns)
+- Smaller bundle size (maybe — hasn't been measured)
+- Fun mental exercise
+- Zero runtime overhead
+
+## What This Teaches Us
+
+YSX is a great example of a few software engineering principles:
+
+1. **Language design matters** — JSX exists for a reason. It's a sweet spot between expressiveness and readability. YAML isn't.
+
+2. **Transpilation is powerful** — You can create surprisingly complex abstractions at build time without runtime cost.
+
+3. **Separation of concerns works** — By splitting parsing, transpilation, and loading into separate modules, YSX is extensible and testable.
+
+4. **Types and validation matter** — The custom YAML types make the format actually safe to parse, rather than just hoping the structure is right.
+
+## Conclusion
+
+YSX is a silly experiment, yes. But it's a *well-engineered* silly experiment.
+
+It proves that you can take React and create an entirely different syntax layer for it, compile it down perfectly, and have it work. The transpiler is solid.
+
+Is it practical? No. But it's proof that React's abstraction layer is robust enough to support multiple syntax styles. And sometimes, that's exactly the kind of silly experiment the programming community needs — not because it will change how we write code, but because understanding *why* it's a bad idea teaches us why the good ideas are actually good.
+
+Would I use YSX? No. Do I respect the engineering? Absolutely.
+
+Now, if you'll excuse me, I need to go think about whether TOML-based state management is a good idea...
+
+---
+
+## Links
+
+- **GitHub:** https://github.com/S33G/ysx
+- **Core Package:** `ysx-core` (parser and transpiler)
+- **Webpack Loader:** `ysx-loader` (seamless integration)
+- **CLI Tool:** `ysx-cli` (command-line transpilation)
+
+Built with ❤️ and questionable life choices.

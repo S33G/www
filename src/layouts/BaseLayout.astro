@@ -58,5 +58,20 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <SkipLink />
     <slot />
     <SettingsPanel client:load />
+
+    <script>
+      import { navigate } from 'astro:transitions/client';
+
+      // ESC key to go back home when not on home page
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          // Check if current page is not the home page
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/' && currentPath !== '') {
+            navigate('/');
+          }
+        }
+      });
+    </script>
   </body>
 </html>
