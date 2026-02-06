@@ -78,14 +78,14 @@ export async function fetchRepos(
  * Get fallback project data when GitHub API is unavailable
  */
 export function getFallbackProjects(
-  repos: { owner: string; name: string; description?: string }[]
+  repos: { owner: string; name: string; description?: string; language?: string | null }[]
 ): GitHubRepo[] {
-  return repos.map(({ owner, name, description }) => ({
+  return repos.map(({ owner, name, description, language }) => ({
     name,
     description: description || null,
     url: `https://github.com/${owner}/${name}`,
     stars: 0,
-    language: null,
+    language: language || null,
     topics: [],
     updatedAt: new Date().toISOString(),
     homepage: null,

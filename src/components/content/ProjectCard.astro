@@ -9,14 +9,15 @@ interface Props {
 }
 
 const { name, description, url, blogUrl, stars = 0, language } = Astro.props;
-const primaryUrl = blogUrl ?? url;
+const hasBlogPost = !!blogUrl;
+const primaryUrl = hasBlogPost ? blogUrl : url;
 const isExternal = primaryUrl.startsWith('http');
 const linkTarget = isExternal ? '_blank' : undefined;
 const linkRel = isExternal ? 'noopener noreferrer' : undefined;
 ---
 
 <article class="project-card">
-  <a href={primaryUrl} target={linkTarget} rel={linkRel} class="project-link">
+  <a href={primaryUrl} target={linkTarget} rel={linkRel} class="project-link" class:list={{ 'has-blog': hasBlogPost }}>
     <header class="project-header">
       <h2 class="project-name">{name}</h2>
       <span class="project-arrow" aria-hidden="true">→</span>
@@ -37,6 +38,9 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
         <span class="project-stars">
           ★ {stars}
         </span>
+      )}
+      {!hasBlogPost && (
+        <span class="no-blog-indicator">No blog post</span>
       )}
     </footer>
   </a>
@@ -81,6 +85,15 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
     position: relative;
     z-index: 1;
     height: 100%;
+    cursor: pointer;
+  }
+
+  .project-link.has-blog {
+    cursor: pointer;
+  }
+
+  .project-link:not(.has-blog) {
+    cursor: default;
   }
 
   .project-header {
@@ -130,6 +143,7 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
     color: var(--text-muted);
     min-height: 1.5rem;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .project-github {
@@ -175,5 +189,11 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
 
   .project-stars {
     color: #f59e0b;
+  }
+
+  .no-blog-indicator {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    opacity: 0.7;
   }
 </style>
