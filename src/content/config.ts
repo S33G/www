@@ -23,6 +23,8 @@ const projectsCollection = defineCollection({
         name: z.string(),
         featured: z.boolean().default(false),
         description: z.string().optional(),
+        language: z.string().optional(),
+        homepage: z.string().optional(),
       })
     ),
   }),
