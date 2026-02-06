@@ -1,28 +1,53 @@
 {
   "repos": [
     {
-      "owner": "s33g",
+      "owner": "S33G",
       "name": "ascii-blog",
       "featured": true,
       "description": "A TypeScript ASCII blog with WebGL effects"
     },
     {
-      "owner": "s33g",
+      "owner": "S33G",
       "name": "proj",
       "featured": true,
-      "description": "A fast TUI project navigator to browse and run actions across local code folders"
+      "description": "A fast, intuitive TUI project navigator for developers. Quickly browse, open, and manage your code projects from the terminal."
     },
     {
-      "owner": "s33g",
+      "owner": "S33G",
+      "name": "switchboard",
+      "featured": true,
+      "description": "A lightweight, zero-config dashboard for Docker. Features real-time container discovery, a responsive web UI, and optional automated Nginx reverse proxy generation."
+    },
+    {
+      "owner": "S33G",
+      "name": "next-webgl-benchmark",
+      "featured": true,
+      "description": "A high-performance WebGL visualization and benchmarking application built with Next.js, React, Three.js, and PostProcessing effects.",
+      "homepage": "https://gpu-benchmark.s33g.uk"
+    },
+    {
+      "owner": "S33G",
+      "name": "ysx",
+      "featured": true,
+      "description": "YSX - YAML syntax for React components. Build-time transpilation with zero overhead and full React 19 support."
+    },
+    {
+      "owner": "S33G",
       "name": "github-fork-manager",
       "featured": true,
-      "description": "A terminal-first tool for cleaning up forks safely at scale"
+      "description": "TUI for listing your GitHub forks, multi-selecting, and safely bulk-deleting with confirmation and logging"
     },
     {
-      "owner": "s33g",
-      "name": "bpm-tool",
+      "owner": "S33G",
+      "name": "groovelab",
       "featured": true,
-      "description": "A web calculator for BPM to ms/Hz, plus swing, groove, MIDI export, and a tiny synth to audition feel"
+      "description": "GrooveLab is a modern, musician-friendly toolbox for timing and theory work. Includes BPM tools, groove quantization, rhythm grids, chord and scale exploration."
+    },
+    {
+      "owner": "S33G",
+      "name": "discord-clanker",
+      "featured": true,
+      "description": "Go-based Discord bot with OpenAI-compatible LLM support, featuring RBAC, rate limiting, token counting, and Redis conversation storage."
     }
   ]
 }
