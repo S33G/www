@@ -2,17 +2,19 @@
   "repos": [
     {
       "owner": "S33G",
-      "name": "This site",
+      "name": "www",
       "featured": true,
-      "description": "A TypeScript ASCII blog with WebGL effects",
-      "language": "TypeScript"
+      "description": "A TypeScript ASCII blog with WebGL effects (this site)",
+      "language": "TypeScript",
+      "blogTag": "ascii-blog"
     },
     {
       "owner": "S33G",
       "name": "proj",
       "featured": true,
       "description": "A fast, intuitive TUI project navigator for developers. Quickly browse, open, and manage your code projects from the terminal.",
-      "language": "Go"
+      "language": "Go",
+      "blogTag": "proj"
     },
     {
       "owner": "S33G",
@@ -41,14 +43,16 @@
       "name": "github-fork-manager",
       "featured": true,
       "description": "TUI for listing your GitHub forks, multi-selecting, and safely bulk-deleting with confirmation and logging",
-      "language": "Go"
+      "language": "Go",
+      "blogTag": "tools"
     },
     {
       "owner": "S33G",
       "name": "groovelab",
       "featured": true,
       "description": "GrooveLab is a modern, musician-friendly toolbox for timing and theory work. Includes BPM tools, groove quantization, rhythm grids, chord and scale exploration.",
-      "language": "TypeScript"
+      "language": "TypeScript",
+      "blogTag": "tools"
     },
     {
       "owner": "S33G",

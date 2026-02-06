@@ -25,6 +25,7 @@ const projectsCollection = defineCollection({
         description: z.string().optional(),
         language: z.string().optional(),
         homepage: z.string().optional(),
+        blogTag: z.string().optional(),
       })
     ),
   }),

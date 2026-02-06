@@ -3,24 +3,53 @@ interface Props {
   name: string;
   description: string | null;
   url: string;
-  blogUrl?: string;
+  blogTag?: string;
+  blogPostCount?: number;
   stars?: number;
   language?: string | null;
 }
 
-const { name, description, url, blogUrl, stars = 0, language } = Astro.props;
-const hasBlogPost = !!blogUrl;
-const primaryUrl = hasBlogPost ? blogUrl : url;
-const isExternal = primaryUrl.startsWith('http');
-const linkTarget = isExternal ? '_blank' : undefined;
-const linkRel = isExternal ? 'noopener noreferrer' : undefined;
+const { name, description, url, blogTag, blogPostCount = 0, stars = 0, language } = Astro.props;
+const hasBlogTag = !!blogTag && blogPostCount > 0;
 ---
 
 <article class="project-card">
-  <a href={primaryUrl} target={linkTarget} rel={linkRel} class="project-link" class:list={{ 'has-blog': hasBlogPost }}>
+  <div class="project-content">
     <header class="project-header">
       <h2 class="project-name">{name}</h2>
-      <span class="project-arrow" aria-hidden="true">→</span>
+      <div class="project-actions">
+        {hasBlogTag && (
+          <a
+            href={`/blog/tags/${blogTag}`}
+            class="project-blog-tag"
+            aria-label={`View ${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''} about ${name}`}
+            title={`${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''}`}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"
+              />
+            </svg>
+            <span class="post-count">{blogPostCount}</span>
+          </a>
+        )}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="project-github"
+          aria-label={`Open ${name} on GitHub`}
+          title="View GitHub repo"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              fill="currentColor"
+              d="M12 2C6.48 2 2 6.58 2 12.26c0 4.51 2.87 8.33 6.84 9.68.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.58 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.32.1-2.75 0 0 .85-.28 2.8 1.05A9.48 9.48 0 0 1 12 6.8c.85 0 1.71.12 2.5.35 1.95-1.33 2.8-1.05 2.8-1.05.55 1.43.2 2.49.1 2.75.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.39-.01 2.51-.01 2.85 0 .27.18.59.69.49 3.97-1.35 6.83-5.17 6.83-9.68C22 6.58 17.52 2 12 2z"
+            />
+          </svg>
+        </a>
+      </div>
     </header>
 
     <p class="project-description">
@@ -39,27 +68,10 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
           ★ {stars}
         </span>
       )}
-      {!hasBlogPost && (
-        <span class="no-blog-indicator">No blog post</span>
-      )}
     </footer>
-  </a>
-  <a
-    href={url}
-    target="_blank"
-    rel="noopener noreferrer"
-    class="project-github"
-    aria-label={`Open ${name} on GitHub`}
-    title="View GitHub repo"
-  >
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        fill="currentColor"
-        d="M12 2C6.48 2 2 6.58 2 12.26c0 4.51 2.87 8.33 6.84 9.68.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.58 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.32.1-2.75 0 0 .85-.28 2.8 1.05A9.48 9.48 0 0 1 12 6.8c.85 0 1.71.12 2.5.35 1.95-1.33 2.8-1.05 2.8-1.05.55 1.43.2 2.49.1 2.75.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.39-.01 2.51-.01 2.85 0 .27.18.59.69.49 3.97-1.35 6.83-5.17 6.83-9.68C22 6.58 17.52 2 12 2z"
-      />
-    </svg>
-  </a>
+  </div>
 </article>
+
 
 <style>
   .project-card {
@@ -76,31 +88,19 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
     box-shadow: var(--shadow-sm);
   }
 
-  .project-link {
+  .project-content {
     display: flex;
     flex-direction: column;
     padding: var(--space-md);
-    color: inherit;
-    text-decoration: none;
-    position: relative;
-    z-index: 1;
     height: 100%;
-    cursor: pointer;
-  }
-
-  .project-link.has-blog {
-    cursor: pointer;
-  }
-
-  .project-link:not(.has-blog) {
-    cursor: default;
   }
 
   .project-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     margin-bottom: var(--space-sm);
+    gap: var(--space-sm);
   }
 
   .project-name {
@@ -108,48 +108,17 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
-    transition: color var(--transition-fast);
+    flex: 1;
   }
 
-  .project-card:hover .project-name {
-    color: var(--color-primary);
-  }
-
-  .project-arrow {
-    color: var(--text-muted);
-    transition: transform var(--transition-fast), color var(--transition-fast);
-  }
-
-  .project-card:hover .project-arrow {
-    transform: translateX(4px);
-    color: var(--color-primary);
-  }
-
-  .project-description {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    margin: 0;
-    line-height: 1.6;
-    flex-grow: 1;
-  }
-
-  .project-footer {
+  .project-actions {
     display: flex;
-    gap: var(--space-md);
-    margin-top: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--border-color);
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    min-height: 1.5rem;
-    align-items: center;
-    flex-wrap: wrap;
+    gap: var(--space-xs);
+    flex-shrink: 0;
   }
 
-  .project-github {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
+  .project-github,
+  .project-blog-tag {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -160,18 +129,60 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
     border: 1px solid var(--border-color);
     color: var(--text-muted);
     transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
-    z-index: 2;
+    cursor: pointer;
+    text-decoration: none;
+    position: relative;
   }
 
-  .project-github svg {
+  .project-github svg,
+  .project-blog-tag svg {
     width: 16px;
     height: 16px;
   }
 
-  .project-github:hover {
+  .project-github:hover,
+  .project-blog-tag:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
     transform: translateY(-1px);
+  }
+
+  .post-count {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background: var(--color-primary);
+    color: var(--bg-primary);
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    border: 1px solid var(--bg-primary);
+  }
+
+  .project-description {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
+    flex-grow: 1;
+    margin-bottom: var(--space-sm);
+  }
+
+  .project-footer {
+    display: flex;
+    gap: var(--space-md);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-color);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    min-height: 1.5rem;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .project-language {
@@ -189,11 +200,5 @@ const linkRel = isExternal ? 'noopener noreferrer' : undefined;
 
   .project-stars {
     color: #f59e0b;
-  }
-
-  .no-blog-indicator {
-    font-size: var(--font-size-xs);
-    color: var(--text-muted);
-    opacity: 0.7;
   }
 </style>

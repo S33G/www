@@ -7,15 +7,15 @@ import { fetchRepos, getFallbackProjects, type GitHubRepo } from '@/lib/github';
 // Get project config
 const projectConfig = await getCollection('projects');
 const repoConfig = projectConfig[0]?.data?.repos || [];
-const projectPosts: Record<string, string> = {
-  'ascii-blog': '/blog/building-this-site',
-  'proj': '/blog/introducing-proj',
-  'github-fork-manager': '/blog/github-fork-manager',
-  'switchboard': '/blog/switchboard',
-  'next-webgl-benchmark': '/blog/next-webgl-benchmark',
-  'ysx': '/blog/ysx',
-  'groovelab': '/blog/groovelab',
-};
+
+// Get all blog posts to count posts per tag
+const blogPosts = await getCollection('blog', ({ data }) => !data.draft);
+const postsPerTag = new Map<string, number>();
+blogPosts.forEach((post) => {
+  post.data.tags?.forEach((tag) => {
+    postsPerTag.set(tag, (postsPerTag.get(tag) || 0) + 1);
+  });
+});
 
 // Try to fetch from GitHub, fallback to static data
 let projects: GitHubRepo[];
@@ -39,16 +39,24 @@ try {
   </div>
 
   <div class="projects-grid">
-    {projects.map((project) => (
-      <ProjectCard
-        name={project.name}
-        description={project.description}
-        url={project.url}
-        blogUrl={projectPosts[project.name]}
-        stars={project.stars}
-        language={project.language}
-      />
-    ))}
+    {projects.map((project) => {
+      // Find blog tag info from config
+      const repoData = repoConfig.find((r) => r.name === project.name);
+      const blogTag = repoData?.blogTag;
+      const blogPostCount = blogTag ? (postsPerTag.get(blogTag) || 0) : 0;
+      
+      return (
+        <ProjectCard
+          name={project.name}
+          description={project.description}
+          url={project.url}
+          blogTag={blogTag}
+          blogPostCount={blogPostCount}
+          stars={project.stars}
+          language={project.language}
+        />
+      );
+    })}
   </div>
 
   {projects.length === 0 && (
