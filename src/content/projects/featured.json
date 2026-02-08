@@ -2,6 +2,15 @@
   "repos": [
     {
       "owner": "S33G",
+      "name": "units",
+      "featured": true,
+      "description": "A browser based unit converter that shows you the math behind every conversion.",
+      "language": "TypeScript",
+      "homepage": "https://units.s33g.uk",
+      "blogTag": "units"
+    },
+    {
+      "owner": "S33G",
       "name": "www",
       "featured": true,
       "description": "A TypeScript ASCII blog with WebGL effects (this site)",
