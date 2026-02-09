@@ -3,7 +3,7 @@
  */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString('en-GB', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
@@ -21,7 +21,10 @@ export function formatDateISO(date: Date | string): string {
 /**
  * Calculate reading time for content
  */
-export function calculateReadingTime(content: string, wordsPerMinute = 200): number {
+export function calculateReadingTime(
+  content: string,
+  wordsPerMinute = 200
+): number {
   const words = content.trim().split(/\s+/).length;
   return Math.ceil(words / wordsPerMinute);
 }

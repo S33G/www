@@ -63,11 +63,11 @@ I used Claude to help implement both renderers. Here's what worked well:
 - Refactoring large code blocks into cleaner patterns
 
 **AI struggles with:**
-- Visual debugging—you can't show it what the glitch looks like
-- Performance intuition—it'll suggest valid code that's slow without knowing *why* it matters
+- Visual debugging — you can't show it what the glitch looks like
+- Performance intuition — it'll suggest valid code that's slow without knowing *why* it matters
 - GPU-specific gotchas (texture filtering, premultiplied alpha, coordinate systems)
 
-The matrix rain effect is a good example. The AI correctly generated the WebGL structure, but the falling "head" of each column was at the wrong position—it rendered the brightest character at the top instead of the bottom. Describing that visually took several attempts. In the end, I had to be very explicit:
+The matrix rain effect is a good example. The AI correctly generated the WebGL structure, but the falling "head" of each column was at the wrong position — it rendered the brightest character at the top instead of the bottom. Describing that visually took several attempts. In the end, I had to be very explicit:
 
 > "The trail is falling downward. The last character in the array (`j === trailLength - 1`) is the leading edge. Make that one brightest."
 

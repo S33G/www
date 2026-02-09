@@ -372,3 +372,72 @@ const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
 
   document.addEventListener('astro:after-swap', setupPostNavigation);
 </script>
+
+<script>
+  function styleMermaidNodes(container: Element) {
+    const rects = container.querySelectorAll<SVGRectElement>(
+      '.node rect, .cluster rect, .label-container'
+    );
+    for (const rect of rects) {
+      rect.setAttribute('rx', '10');
+      rect.setAttribute('ry', '10');
+    }
+
+    const svg = container.querySelector('svg');
+    if (!svg) return;
+
+    let defs = svg.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svg.prepend(defs);
+    }
+
+    if (!defs.querySelector('#mermaid-node-shadow')) {
+      const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+      filter.setAttribute('id', 'mermaid-node-shadow');
+      filter.setAttribute('x', '-10%');
+      filter.setAttribute('y', '-10%');
+      filter.setAttribute('width', '130%');
+      filter.setAttribute('height', '140%');
+      filter.innerHTML = `
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.25)" flood-opacity="0.4"/>
+      `;
+      defs.appendChild(filter);
+    }
+
+    const nodes = container.querySelectorAll<SVGGElement>('.node, .cluster');
+    for (const node of nodes) {
+      node.style.filter = 'url(#mermaid-node-shadow)';
+    }
+  }
+
+  function observeMermaidContainers() {
+    const containers = document.querySelectorAll('.mermaid');
+    if (containers.length === 0) return;
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        const target = mutation.target as Element;
+        const container = target.closest('.mermaid') ?? target;
+        if (container.querySelector('svg')) {
+          styleMermaidNodes(container);
+        }
+      }
+    });
+
+    for (const container of containers) {
+      if (container.querySelector('svg')) {
+        styleMermaidNodes(container);
+      }
+      observer.observe(container, { childList: true, subtree: true });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', observeMermaidContainers, { once: true });
+  } else {
+    observeMermaidContainers();
+  }
+
+  document.addEventListener('astro:after-swap', observeMermaidContainers);
+</script>

@@ -16,7 +16,7 @@ GrooveLab is a small, browser-based toolbox for timing + basic theory work:
 - **Tempo math:** BPM → milliseconds (note values, delay times) + tap tempo
 - **Timekeeping:** metronome + rhythm grid
 - **Groove tools:** swing utilities + MIDI export
-- **Theory helpers:** fretboard + key finder + pitch analyzer
+- **Theory helpers:** fretboard + key finder + pitch analyser
 - **Session glue:** setlist builder (stored locally, exportable)
 
 The details are still evolving, but the point is stable: it’s the stuff musicians reach for while writing/recording, packaged into one place.
@@ -28,7 +28,7 @@ The history is pretty literal in the commit log:
 - `0925a62` Bpm tool -> tunetool
 - `2b75cd0` tunetool -> GrooveLab
 
-That middle name (“tunetool”) was me realizing the scope was no longer tempo-only, but also not having a clean product shape yet.
+That middle name (“tunetool”) was me realising the scope was no longer tempo-only, but also not having a clean product shape yet.
 
 “GrooveLab” is the reset: timing + groove + a little bit of harmony under one coherent umbrella.
 
@@ -41,7 +41,7 @@ export const STORAGE_KEYS = {
   THEME: 'groovelab-theme',
   LAST_BPM: 'groovelab-last-bpm',
   SETLISTS: 'groovelab-setlists',
-} as const
+} as const;
 ```
 
 That’s a breaking change for existing local data, but acceptable for a personal tool at this stage. If I cared about migration, I’d add a one-time key copy on boot.
@@ -63,7 +63,7 @@ The big takeaway: the win wasn’t “AI wrote the code”. The win was getting 
 
 ## The prompt mattered more than the model
 
-The single biggest lever was getting the prompt right *up front*.
+The single biggest lever was getting the prompt right _up front_.
 
 When the spec prompt was vague (“make a music toolbox”), the implementation drifted immediately:
 
@@ -73,9 +73,9 @@ When the spec prompt was vague (“make a music toolbox”), the implementation 
 
 When the spec prompt was concrete, the coder model stayed on rails. The structure that made the difference:
 
-- **Purpose:** what problem this solves *in a session*
+- **Purpose:** what problem this solves _in a session_
 - **Non-goals:** what not to build (accounts, cloud sync, etc.)
-- **Feature list:** explicit, finite, and prioritized
+- **Feature list:** explicit, finite, and prioritised
 - **Data + persistence:** what’s stored, where, and key names
 - **Definition of done:** what “finished” means for this iteration
 

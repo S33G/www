@@ -15,7 +15,7 @@ I built BPM Tool because I was tired of pausing a session to do tempo math. I wa
 ## What it does
 
 - Converts BPM into ms and Hz values for common note divisions
-- Visualizes groove and swing timing
+- Visualises groove and swing timing
 - Lets you audition patterns with a synthesized drum kit
 - Exports the result as MIDI
 
@@ -24,6 +24,7 @@ I built BPM Tool because I was tired of pausing a session to do tempo math. I wa
 Most DAWs give you sync values (quarter, eighth, triplet). That is great until you need something odd or a precise millisecond value for an effect that only speaks ms or Hz.
 
 Examples where this comes up constantly:
+
 - Delay throws that must land exactly on the beat
 - Reverb pre-delay to push a sound forward or back
 - Sidechain release times for the right pump
@@ -63,7 +64,7 @@ MIDI drum maps are strict. Drums belong on channel 10 (0-indexed as 9), and each
 
 The tricky part is translating continuous timing into discrete MIDI ticks. The playback engine is flexible, but MIDI files want exact integers. That meant keeping the groove math deterministic so the export and the auditioned pattern stay aligned.
 
-In practice I generate drum notes by groove type (straight, swing, triplet), then dump them into a channel-10 track. Kick/snare stay on quarter notes, hats are the only subdivision that changes. The same note map drives both playback and export so there is no mismatch.
+In practice, I generate drum notes by groove type (straight, swing, triplet), then dump them into a channel-10 track. Kick/snare stay on quarter notes, hats are the only subdivision that changes. The same note map drives both playback and export so there is no mismatch.
 
 ```typescript
 const notes = generateDrumNotes(bpm, grooveType, swingPercent, bars);
@@ -94,6 +95,7 @@ Quarter Note (ms) = 60,000 / BPM
 ```
 
 From there:
+
 - Half note = quarter x 2
 - Eighth note = quarter / 2
 - Dotted = value x 1.5
@@ -106,10 +108,10 @@ Nothing fancy. Just fast access to the numbers you always end up needing.
 
 Building a tool for musicians as a musician is different. You can feel the friction in your own workflow, which makes scope decisions easier.
 
-The hardest part was stopping. Everyone has a "one more feature" suggestion: polyrhythms, tempo ramps, odd meters. I kept the focus tight: translate tempo into timing, then support that core with groove visualization, playback, and export.
+The hardest part was stopping. Everyone has a "one more feature" suggestion: polyrhythms, tempo ramps, odd metres. I kept the focus tight: translate tempo into timing, then support that core with groove visualisation, playback, and export.
 
 That is the whole product.
 
 ---
 
-*Built with [Next.js](https://nextjs.org), [React](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Tone.js](https://tonejs.github.io)*
+_Built with [Next.js](https://nextjs.org), [React](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Tone.js](https://tonejs.github.io)_

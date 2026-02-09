@@ -1,13 +1,13 @@
 ---
-title: "YSX: A Delightfully Weird React Experiment"
-description: "A build-time transpiler experiment that lets you write React components in pure YAML format."
+title: 'YSX: A Delightfully Weird React Experiment'
+description: 'A build-time transpiler experiment that lets you write React components in pure YAML format.'
 pubDate: 2026-02-02
 tags: ['ysx', 'react', 'transpilation', 'experiments']
 ---
 
 ## What Happens When You Make React Declarative... in YAML?
 
-Have you ever looked at JSX and thought, "This is nice and all, but what if we made it... even *more* structured?" Well, meet **YSX** (YAML Syntax Extension) — a build-time transpiler that lets you write React components in pure YAML format.
+Have you ever looked at JSX and thought, "This is nice and all, but what if we made it... even _more_ structured?" Well, meet **YSX** (YAML Syntax Extension) — a build-time transpiler that lets you write React components in pure YAML format.
 
 Let me be clear upfront: this is a silly experiment. It's delightfully, wonderfully silly. But it's also genuinely interesting from a language design perspective, and surprisingly functional.
 
@@ -23,9 +23,7 @@ function Counter() {
     <div>
       <h1>Counter Demo</h1>
       <p>Count: {count}</p>
-      <button onClick={() => setCount(count + 1)}>
-        Increment
-      </button>
+      <button onClick={() => setCount(count + 1)}>Increment</button>
     </div>
   );
 }
@@ -46,7 +44,7 @@ render:
   div:
     children:
       - h1: Counter Demo
-      - p: "Count: {count}"
+      - p: 'Count: {count}'
       - button:
           onClick: !!js |
             () => setCount(count + 1)
@@ -57,7 +55,7 @@ Everything is there. The component structure, the hooks, the event handlers, the
 
 ## Why Is This Silly?
 
-1. **YAML is not a programming language** — It's a data serialization format. Using it to describe UI logic is like using TOML to write your business logic. Technically you *can*, but should you?
+1. **YAML is not a programming language** — It's a data serialisation format. Using it to describe UI logic is like using TOML to write your business logic. Technically you _can_, but should you?
 
 2. **Event handlers feel awkward** — You need to embed JavaScript strings with the `!!js` tag. It's a workaround that highlights the impedance mismatch between data and code.
 
@@ -69,7 +67,7 @@ Everything is there. The component structure, the hooks, the event handlers, the
 
 ## Why?
 
-Because it's *interesting* (to some, I guess). Here's what makes YSX genuinely clever:
+Because it's _interesting_ (to some, I guess). Here's what makes YSX genuinely clever:
 
 ### 1. **Zero Runtime Overhead**
 
@@ -89,7 +87,7 @@ const jsxCode = transpiler.transpile(ast);
 
 ### 2. **Monorepo Architecture**
 
-The project is beautifully organized:
+The project is beautifully organised:
 
 - **ysx-core** — Parser (YAML → AST) and Transpiler (AST → JSX)
 - **ysx-loader** — Webpack/Vite integration for seamless development
@@ -159,9 +157,13 @@ Becomes:
 import React from 'react';
 
 function SimpleButton(props) {
-  return React.createElement('button', {
-    onClick: () => alert('Clicked!')
-  }, 'Click Me');
+  return React.createElement(
+    'button',
+    {
+      onClick: () => alert('Clicked!'),
+    },
+    'Click Me'
+  );
 }
 
 export default SimpleButton;
@@ -174,33 +176,33 @@ export default SimpleButton;
 name: App
 
 imports:
-- from: react
-  default: React
-  named: [ useState ]
-- from: ./App.css
+  - from: react
+    default: React
+    named: [useState]
+  - from: ./App.css
 
 hooks:
-- useState:
-    variable: count
-    initialValue: 0
+  - useState:
+      variable: count
+      initialValue: 0
 
 render:
   div:
     className: App
     children:
-    - header:
-        className: App-header
-        children:
-        - p:
-            children: "Count: {count}"
-        - button:
-            children: Increase
-            onClick: !!js |
-              () => setCount(count + 1)
-        - button:
-            children: Decrease
-            onClick: !!js |
-              () => setCount(count - 1)
+      - header:
+          className: App-header
+          children:
+            - p:
+                children: 'Count: {count}'
+            - button:
+                children: Increase
+                onClick: !!js |
+                  () => setCount(count + 1)
+            - button:
+                children: Decrease
+                onClick: !!js |
+                  () => setCount(count - 1)
 ```
 
 This handles state initialization, string interpolation, event handlers, and nested components. All from YAML.
@@ -215,12 +217,12 @@ The parser extends YAML's schema with custom types:
 this.schema = yaml.DEFAULT_SCHEMA.extend([
   new yaml.Type('tag:yaml.org,2002:js', {
     kind: 'scalar',
-    construct: (data) => ({ type: 'JSExpression', code: data })
+    construct: (data) => ({ type: 'JSExpression', code: data }),
   }),
   new yaml.Type('tag:yaml.org,2002:ts', {
     kind: 'scalar',
-    construct: (data) => ({ type: 'TSAnnotation', code: data })
-  })
+    construct: (data) => ({ type: 'TSAnnotation', code: data }),
+  }),
 ]);
 ```
 
@@ -279,6 +281,7 @@ parseInterpolation(str) {
 Technically? Yes. Would I recommend it for production? No. Here's why:
 
 **Cons:**
+
 - Debugging is harder (you're reading YAML, errors point to JSX)
 - Team familiarity (not everyone knows YAML)
 - Editor support is basically zero
@@ -286,6 +289,7 @@ Technically? Yes. Would I recommend it for production? No. Here's why:
 - You lose JSX's inline expressiveness
 
 **Pros:**
+
 - Genuinely declarative
 - Very structured (no room for bad patterns)
 - Smaller bundle size (maybe — hasn't been measured)
@@ -306,11 +310,11 @@ YSX is a great example of a few software engineering principles:
 
 ## Conclusion
 
-YSX is a silly experiment, yes. But it's a *well-engineered* silly experiment.
+YSX is a silly experiment, yes. But it's a _well-engineered_ silly experiment.
 
 It proves that you can take React and create an entirely different syntax layer for it, compile it down perfectly, and have it work. The transpiler is solid.
 
-Is it practical? No. But it's proof that React's abstraction layer is robust enough to support multiple syntax styles. And sometimes, that's exactly the kind of silly experiment the programming community needs — not because it will change how we write code, but because understanding *why* it's a bad idea teaches us why the good ideas are actually good.
+Is it practical? No. But it's proof that React's abstraction layer is robust enough to support multiple syntax styles. And sometimes, that's exactly the kind of silly experiment the programming community needs — not because it will change how we write code, but because understanding _why_ it's a bad idea teaches us why the good ideas are actually good.
 
 Would I use YSX? No. Do I respect the engineering? Absolutely.
 

@@ -20,37 +20,44 @@ I built [Units](https://units.s33g.uk) to see how far I could push the "AI-nativ
 
 It's a standard, robust stack. Nothing exotic, which makes it perfect for testing the _process_ rather than the tech.
 
-## The Workflow
+## The Workflow: An AI Assembly Line
 
-The interesting part isn't the code itself, but how it was written. I used a three-stage pipeline:
-
-### 1. Discovery (Perplexity + Gemini 3)
-
-I used Perplexity to generate the initial list of categories and units.
-
-For the math, I relied on Gemini 3. It provided the explicit conversion formulas and sources for the constants, which allowed me to seed the database with verified data. This saved significant time on research and manual data entry.
-
-### 2. Planning (Opencode / Sisyphus)
-
-Once I knew _what_ to build, I needed a plan. I used Opencode (specifically the Sisyphus agent) to break the project down into actionable tasks. We defined the architecture, the component structure, and the data models.
-
-### 3. Implementation (Gemini 3 Pro + Sisyphus)
-
-I used Gemini 3 Pro to write the code. It handled the React component structure and the separation of concerns for the conversion logic effectively.
+The interesting part isn't the code itself, but the process. I treated LLMs not as autocomplete, but as specialised agents in a three-stage pipeline.
 
 ```mermaid
 flowchart TD
-    A[Idea] -->|Perplexity| B[Discovery]
-    B -->|Gemini 3| C[Refined Specs]
-    C -->|Opencode| D[Plan & Archtecture]
-    D -->|Gemini 3 Pro| E[Code Implementation]
-    E -->|Vitest| F[Verification]
-    F -->|GitHub Pages| G[Deploy]
+    subgraph P1 [Phase 1: Discovery]
+        Idea[💡 Vague Idea] -->|Perplexity| List[📋 Scope & Units]
+        List -->|Gemini 3| Math[📐 Formulas & Data]
+    end
+
+    subgraph P2 [Phase 2: Architecture]
+        Math -->|Opencode| Plan[📝 Sisyphus Plan]
+        Plan -->|Sisyphus| Arch[🏗️ Component Specs]
+    end
+
+    subgraph P3 [Phase 3: Execution]
+        Arch -->|Gemini 3 Pro| Code[💻 Implementation]
+        Code -->|Vitest| Test[✅ Verification]
+        Test -->|GitHub| Ship[🚀 Deploy]
+    end
 ```
+
+### 1. Discovery (The "What")
+
+I started with **Perplexity** to map the territory — generating comprehensive lists of unit categories and edge cases. Then, **Gemini 3** acted as the mathematician, providing explicit conversion formulas and citing sources (like the 1959 International Yard agreement). This gave me verified constants to seed the database, skipping hours of manual data entry.
+
+### 2. Planning (The "How")
+
+With the requirements clear, I used **Opencode** to architect the solution. Sisyphus broke the project down into actionable tasks, defining the `UnitDef` TypeScript interfaces and component hierarchy before writing a single line of code. This "blueprint phase" is critical — it prevents the spaghetti code that usually comes from blind prompting.
+
+### 3. Execution (The "Build")
+
+**Gemini 3 Pro** handled the heavy lifting. Because the planning phase established strict boundaries (separation of concerns), the generated code was modular and testable from the start. **Vitest** verified the conversion logic, and the app went straight to production.
 
 ## Code Spotlight: The Core Logic
 
-The conversion logic needs to be rock solid. We decided to normalize everything to a "base unit" first, then convert to the target unit. This avoids defining conversion factors for every possible pair—with n units, that would be n² definitions instead of just n.
+The conversion logic needs to be rock solid. We decided to normalise everything to a "base unit" first, then convert to the target unit. This avoids defining conversion factors for every possible pair — with n units, that would be n² definitions instead of just n.
 
 Here is the clean implementation `lib/convert.ts` that powers the app:
 
@@ -72,7 +79,7 @@ function unitFromBase(unit: UnitDef, value: number): number {
 }
 ```
 
-This approach makes adding new units trivial—you only need to define how to get to the base unit, and the system handles the rest.
+This approach makes adding new units trivial — you only need to define how to get to the base unit, and the system handles the rest.
 
 ## The Result
 
