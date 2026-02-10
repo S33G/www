@@ -1,0 +1,204 @@
+---
+title: 'The Navigation API: the end of routing hacks'
+description: 'The browser finally has a dedicated API for SPA navigation.'
+pubDate: 2026-02-10
+tags: ['web', 'javascript', 'spa', 'browser-apis']
+---
+
+Every SPA router ever shipped is built on the same hack: intercept `<a>` clicks, call `history.pushState()`, and pretend the browser navigated. It didn't. You just changed the URL bar and crossed your fingers.
+
+The [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) replaces that entire pattern with something the browser actually understands. As of January 2026 it's Baseline — supported in Chrome, Firefox, Safari, and Edge.
+
+## Why the History API was always wrong for this
+
+The [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) wasn't designed for SPAs. Ian Hickson, the HTML spec editor, has [called `pushState()` one of his biggest mistakes](https://html5doctor.com/interview-with-ian-hickson-html-editor/).
+
+`history.pushState()` doesn't navigate. It updates the URL and pushes a state entry. The browser has no idea anything happened — no loading indicator, no abort signal, no lifecycle hooks. To fake SPA routing on top of it, you needed:
+
+1. Click handlers on every `<a>` tag (or a global listener with delegation)
+2. `event.preventDefault()` on each one
+3. A manual `history.pushState()` call
+4. A [`popstate`](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listener for back/forward — which doesn't fire on `pushState`, only on browser-triggered navigation
+5. Manual DOM updates to reflect the new route
+6. Edge case handling for forms, `window.location`, hashes, and iframes
+
+```js
+// The skeleton of every lightweight SPA router
+document.addEventListener('click', (e) => {
+  const anchor = e.target.closest('a');
+  if (!anchor || anchor.origin !== location.origin) return;
+  e.preventDefault();
+  history.pushState(null, '', anchor.href);
+  renderPage(anchor.href); // your problem
+});
+
+window.addEventListener('popstate', () => {
+  renderPage(location.href); // also your problem
+});
+```
+
+That's fragile, incomplete, and everywhere. It doesn't handle forms, programmatic navigation, or anything "in progress." The entire [`history`](https://www.npmjs.com/package/history) npm package (5M+ weekly downloads, used internally by React Router) exists solely to paper over these gaps.
+
+## One event to handle everything
+
+The Navigation API gives the browser a single `navigate` event that fires for **all** navigations — link clicks, form submissions, back/forward, `pushState()` calls, and programmatic `navigation.navigate()` calls. One listener, one place.
+
+```js
+navigation.addEventListener('navigate', (event) => {
+  if (!event.canIntercept) return;
+  if (event.hashChange || event.downloadRequest !== null) return;
+
+  const url = new URL(event.destination.url);
+
+  if (url.pathname.startsWith('/articles/')) {
+    event.intercept({
+      async handler() {
+        renderPlaceholder();
+        const res = await fetch(`/api/articles${url.pathname}`, {
+          signal: event.signal,
+        });
+        renderArticle(await res.json());
+      },
+    });
+  }
+});
+```
+
+The things that matter here:
+
+- **`event.intercept()`** tells the browser "I'm handling this." The URL updates, the tab shows a loading spinner, and the stop button works. The browser *knows* a navigation is in progress.
+- **`event.signal`** is a built-in `AbortSignal`. Click another link mid-fetch and it cancels automatically.
+- **`event.canIntercept`** is `false` for cross-origin navigations. The API is honest about its boundaries.
+- **You never touch `<a>` tags.** No `preventDefault()`, no `<Link>` component wrappers, no delegation hacks. Standard HTML links just work.
+
+## Example: global link handler for a CMS
+
+This is the use case that makes it click. Say you have a blog or CMS where content has standard `<a href="/about">` links. With the History API you had two bad options: rewrite `<a>` into framework [`<Link>`](https://reactrouter.com/start/framework/navigating) components, or add a fragile global click listener.
+
+With the Navigation API, one listener at the root handles every same-origin link on the page — framework components, server-rendered HTML, user-generated content. All of it.
+
+```js
+navigation.addEventListener('navigate', (event) => {
+  if (!event.canIntercept || event.hashChange) return;
+
+  event.intercept({
+    async handler() {
+      const html = await fetchPage(event.destination.url);
+      document.querySelector('#content').innerHTML = html;
+    },
+  });
+});
+```
+
+Compare this with what [React Router](https://reactrouter.com) does internally: component wrappers, context providers, click interception, `popstate` listeners, scroll restoration logic. The Navigation API collapses most of that into browser-native behaviour.
+
+## Example: form submissions without reload
+
+The `navigate` event fires for form submissions too. If [`event.formData`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/formData) isn't `null`, it's a `POST`.
+
+```js
+navigation.addEventListener('navigate', (event) => {
+  if (!event.canIntercept || !event.formData) return;
+
+  const url = new URL(event.destination.url);
+  if (url.pathname !== '/search') return;
+
+  event.intercept({
+    async handler() {
+      const query = event.formData.get('q');
+      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      renderSearchResults(await res.json());
+    },
+  });
+});
+```
+
+No `onSubmit` handler. No `event.preventDefault()` on the form. A plain `<form action="/search" method="post">` is intercepted like any other navigation. This replaces patterns like Remix's [`<Form>` component](https://remix.run/docs/en/main/components/form) for simple cases — the browser handles the interception natively.
+
+## Example: state that survives refresh
+
+`history.state` is coupled to the global history stack and shared across frames. The Navigation API gives each entry isolated state via [`getState()`](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/getState).
+
+```js
+// Store UI state when navigating
+navigation.navigate('/photos/42', {
+  state: { scrollY: window.scrollY, lightboxOpen: true },
+});
+
+// Restore it — even after a refresh
+const state = navigation.currentEntry.getState();
+if (state?.lightboxOpen) {
+  openLightbox();
+  window.scrollTo(0, state.scrollY);
+}
+
+// Update without navigating
+navigation.updateCurrentEntry({
+  state: { ...navigation.currentEntry.getState(), sidebarCollapsed: true },
+});
+```
+
+This stores structured clone data — objects, arrays, dates. It's per-entry and persists across refreshes. You can inspect all entries via `navigation.entries()`, each with a URL, key, and state. The history stack is no longer opaque.
+
+This replaces the `sessionStorage` dance people do to survive refresh, and the `useEffect(() => { ... }, [location])` pattern for syncing state with URL changes.
+
+## What it replaces (and what it doesn't)
+
+**Does it kill React Router?** No. React Router provides component-level route matching, nested layouts, data loaders, and error boundaries. The Navigation API doesn't do any of that.
+
+What it replaces is the plumbing underneath:
+
+| What | Why it's redundant |
+|------|--------------------|
+| [`history`](https://www.npmjs.com/package/history) npm package | The browser handles the history stack natively now. This was the abstraction layer under React Router and most other routers. |
+| [`popstate`](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listeners | The `navigate` event covers back/forward, pushes, replaces — everything `popstate` did plus more. |
+| Custom `<Link>` components | Their core job was `preventDefault()` + `pushState()`. Standard `<a>` tags now work without wrappers. |
+| [`scrollRestoration`](https://developer.mozilla.org/en-US/docs/Web/API/History/scrollRestoration) hacks | `intercept()` gives you fine-grained scroll control with `event.scroll()` and automatic restoration. |
+| `useEffect`-based route watchers | `navigation.currentEntry` is a reliable source of truth. [`currententrychange`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/currententrychange_event) fires when it changes. |
+
+React Router's developers have [discussed adopting it internally](https://github.com/remix-run/react-router/discussions/14468). Angular is further along — the team has already built [internal primitives](https://github.com/angular/angular/tree/main/packages/core/primitives/dom-navigation) around it in `@angular/core`.
+
+## Browser support
+
+As of January 2026, the Navigation API hit [Baseline "Newly available"](https://caniuse.com/mdn-api_navigation):
+
+| Browser | Version | Notes |
+|---------|---------|-------|
+| Chrome | 102+ | Since mid-2022 |
+| Edge | 102+ | Since mid-2022 |
+| Firefox | 147+ | Shipped |
+| Safari | 26.2+ | Shipped (desktop and iOS) |
+
+Global coverage is around **80%**. That's real. This isn't experimental anymore.
+
+For older browsers, [`@virtualstate/navigation`](https://github.com/virtualstate/navigation) provides a polyfill covering the full API surface. A simple progressive enhancement pattern works:
+
+```js
+if (window.navigation) {
+  navigation.addEventListener('navigate', handleNavigate);
+} else {
+  window.addEventListener('popstate', handlePopState);
+}
+```
+
+The [aleph.js](https://github.com/alephjs/aleph.js) framework already ships this pattern in production.
+
+## Gotchas
+
+The API is solid but has edges:
+
+- **No `navigate` event on initial page load.** If you do client-side rendering, you need a separate init function. Server-rendered pages don't have this problem.
+- **Single frame only.** It works on the top-level page or a single `<iframe>`. No cross-frame history manipulation — which is actually an improvement, since the History API's cross-frame behaviour was a notorious source of bugs.
+- **You can't delete or reorder entries.** Navigate to a temporary modal and that entry stays in the stack. No way to clean it up programmatically.
+- **Traverse cancellation is limited.** You can't `preventDefault()` a back/forward navigation. The event still fires so you can observe it, but you can't block it.
+- **Still marked "Experimental" on MDN**, even though it ships everywhere. Don't let the label put you off — the [spec](https://github.com/WICG/navigation-api) is part of the [HTML Living Standard](https://html.spec.whatwg.org/multipage/nav-history-apis.html#navigation-api) now.
+
+## The shift
+
+The interesting thing here isn't any single method or event. It's the change in who does what.
+
+With the History API, the browser was something you worked around. You suppressed its defaults, faked its navigations, and manually managed state it should have tracked. Every SPA router is fundamentally a workaround for the browser not understanding what your app is doing.
+
+The Navigation API inverts that. `event.intercept()` is a contract: "I'm handling this navigation." The browser responds with a loading indicator, an abort signal, a managed history entry, and the right events when you're done.
+
+The browser finally understands client-side routing. That's the whole point.
