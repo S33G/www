@@ -5,9 +5,12 @@ import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import mermaid from 'astro-mermaid';
 
+const previewBase = process.env.PREVIEW_BASE || undefined;
+
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://s33g.dev',
+  site: previewBase ? `https://s33g.dev${previewBase}` : 'https://s33g.dev',
+  base: previewBase || '/',
   output: 'static',
   integrations: [
     // mermaid must be first to process diagrams before MDX
