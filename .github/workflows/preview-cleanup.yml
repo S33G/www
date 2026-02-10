@@ -18,13 +18,13 @@ jobs:
 
       - name: Remove preview directory
         run: |
-          PR_DIR="pr-${{ github.event.pull_request.number }}"
-          if [ -d "$PR_DIR" ]; then
+          PREVIEW_DIR="preview-$(echo '${{ github.head_ref }}' | sed 's/[^a-zA-Z0-9-]/-/g')"
+          if [ -d "$PREVIEW_DIR" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git rm -rf "$PR_DIR"
-            git commit -m "chore: remove preview for PR #${{ github.event.pull_request.number }}"
+            git rm -rf "$PREVIEW_DIR"
+            git commit -m "chore: remove preview for ${{ github.head_ref }}"
             git push
           else
-            echo "Preview directory $PR_DIR not found, skipping cleanup"
+            echo "Preview directory $PREVIEW_DIR not found, skipping cleanup"
           fi

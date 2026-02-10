@@ -9,7 +9,7 @@ const previewBase = process.env.PREVIEW_BASE || undefined;
 
 // https://astro.build/config
 export default defineConfig({
-  site: previewBase ? `https://s33g.dev${previewBase}` : 'https://s33g.dev',
+  site: previewBase ? `https://s33g.uk${previewBase}` : 'https://s33g.uk',
   base: previewBase || '/',
   output: 'static',
   integrations: [
