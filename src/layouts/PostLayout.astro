@@ -4,7 +4,7 @@ import Navigation from '@/components/ui/Navigation.astro';
 import PostTitle from '@/components/content/PostTitle.astro';
 import PostCard from '@/components/content/PostCard.astro';
 import ASCIIBackground from '@/components/ascii/ASCIIBackground.astro';
-import { formatDate } from '@/lib/utils';
+import { formatDate, withBase } from '@/lib/utils';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -31,8 +31,8 @@ const {
   backHref = '/blog',
   backLabel = 'Back to posts',
 } = Astro.props;
-const prevHref = prevPost ? `/blog/${prevPost.slug}` : '';
-const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
+const prevHref = prevPost ? withBase(`/blog/${prevPost.slug}`) : '';
+const nextHref = nextPost ? withBase(`/blog/${nextPost.slug}`) : '';
 ---
 
 <BaseLayout
@@ -58,7 +58,7 @@ const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
         data-next={nextHref}
       >
         <header class="post-header">
-          <a href="/blog" class="back-link">← Back to posts</a>
+          <a href={withBase("/blog")} class="back-link">← Back to posts</a>
           <PostTitle title={frontmatter.title} />
           <div class="post-meta">
             <time datetime={frontmatter.pubDate.toISOString()}>
@@ -73,7 +73,7 @@ const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
           {frontmatter.tags && frontmatter.tags.length > 0 && (
             <div class="post-tags">
               {frontmatter.tags.map((tag) => (
-                <a href={`/blog/tags/${tag}`} class="tag">{tag}</a>
+                <a href={withBase(`/blog/tags/${tag}`)} class="tag">{tag}</a>
               ))}
             </div>
           )}
@@ -100,7 +100,7 @@ const nextHref = nextPost ? `/blog/${nextPost.slug}` : '';
               </div>
             </section>
           )}
-          <a href="/blog" class="back-link">← Back to all posts</a>
+          <a href={withBase("/blog")} class="back-link">← Back to all posts</a>
         </footer>
       </article>
     </main>

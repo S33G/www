@@ -1,5 +1,5 @@
 ---
-import { formatDate } from '@/lib/utils';
+import { formatDate, withBase } from '@/lib/utils';
 
 interface Props {
   slug: string;
@@ -13,7 +13,7 @@ const { slug, title, description, pubDate, tags = [] } = Astro.props;
 ---
 
 <article class="post-card">
-  <a href={`/blog/${slug}`} class="post-link">
+  <a href={withBase(`/blog/${slug}`)} class="post-link">
     <header class="post-card-header">
       <time datetime={pubDate.toISOString()} class="post-date">
         {formatDate(pubDate)}

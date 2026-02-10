@@ -2,6 +2,7 @@
 import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
 import PostCard from '@/components/content/PostCard.astro';
 import { getCollection } from 'astro:content';
+import { withBase } from '@/lib/utils';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog', ({ data }) => !data.draft);
@@ -29,7 +30,7 @@ const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDa
 
 <ConsoleLayout title={`#${tag}`} description={`Posts tagged with ${tag}`}>
   <div class="tag-header">
-    <a href="/blog" class="back-link">← Back to posts</a>
+    <a href={withBase("/blog")} class="back-link">← Back to posts</a>
     <h1>{tag}</h1>
     <p class="post-count">{posts.length} post{posts.length !== 1 ? 's' : ''}</p>
   </div>

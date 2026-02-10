@@ -92,6 +92,16 @@ export function randomId(length = 8): string {
 }
 
 /**
+ * Resolve a site-relative path against the configured base URL.
+ * In production BASE_URL is "/"; in preview deploys it's "/pr-N/".
+ * Handles double-slash avoidance so callers can pass "/blog" etc.
+ */
+export function withBase(path: string): string {
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+/**
  * Check if we're in browser environment
  */
 export function isBrowser(): boolean {

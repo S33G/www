@@ -1,5 +1,6 @@
 ---
 import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
+import { withBase } from '@/lib/utils';
 ---
 
 <ConsoleLayout title="404 - Not Found" description="Page not found">
@@ -21,10 +22,10 @@ import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
     <div class="error-suggestions">
       <p>Try one of these:</p>
       <ul>
-        <li><code>cd /</code> - <a href="/">Go home</a></li>
-        <li><code>cd /blog</code> - <a href="/blog">View blog</a></li>
-        <li><code>cd /projects</code> - <a href="/projects">View projects</a></li>
-        <li><code>cd /about</code> - <a href="/about">About me</a></li>
+        <li><code>cd /</code> - <a href={withBase("/")}>Go home</a></li>
+        <li><code>cd /blog</code> - <a href={withBase("/blog")}>View blog</a></li>
+        <li><code>cd /projects</code> - <a href={withBase("/projects")}>View projects</a></li>
+        <li><code>cd /about</code> - <a href={withBase("/about")}>About me</a></li>
       </ul>
     </div>
   </div>

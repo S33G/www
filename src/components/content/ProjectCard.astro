@@ -1,4 +1,6 @@
 ---
+import { withBase } from '@/lib/utils';
+
 interface Props {
   name: string;
   description: string | null;
@@ -20,7 +22,7 @@ const hasBlogTag = !!blogTag && blogPostCount > 0;
       <div class="project-actions">
         {hasBlogTag && (
           <a
-            href={`/blog/tags/${blogTag}`}
+            href={withBase(`/blog/tags/${blogTag}`)}
             class="project-blog-tag"
             aria-label={`View ${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''} about ${name}`}
             title={`${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''}`}

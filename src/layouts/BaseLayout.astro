@@ -19,6 +19,7 @@ interface Props {
 
 const { title, description = 'A developer blog with ASCII aesthetics', image, article } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const basePath = import.meta.env.BASE_URL.replace(/\/+$/, '') || '';
 ---
 
 <!doctype html>
@@ -54,7 +55,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
     />
   </head>
-  <body>
+  <body data-base-path={basePath}>
     <SkipLink />
     <slot />
     <SettingsPanel client:load />
@@ -62,13 +63,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <script>
       import { navigate } from 'astro:transitions/client';
 
-      // ESC key to go back home when not on home page
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
-          // Check if current page is not the home page
+          const base = document.body.dataset.basePath || '';
+          const homeUrl = base ? `${base}/` : '/';
           const currentPath = window.location.pathname;
-          if (currentPath !== '/' && currentPath !== '') {
-            navigate('/');
+          if (currentPath !== homeUrl && currentPath !== base && currentPath !== '/' && currentPath !== '') {
+            navigate(homeUrl);
           }
         }
       });
