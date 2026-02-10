@@ -1,1 +1,0 @@
-import{n as o}from"./router.CxpQgbQp.js";import"./client.B9YBqyHK.js";document.addEventListener("keydown",n=>{if(n.key==="Escape"){const e=document.body.dataset.basePath||"",a=e?`${e}/`:"/",t=window.location.pathname;t!==a&&t!==e&&t!=="/"&&t!==""&&o(a)}});
