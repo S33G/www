@@ -18,18 +18,7 @@ blogPosts.forEach((post) => {
 });
 
 // Try to fetch from GitHub, fallback to static data
-let projects: GitHubRepo[];
-
-try {
-  projects = await fetchRepos(repoConfig);
-
-  // If GitHub API failed, use fallback
-  if (projects.length === 0) {
-    projects = getFallbackProjects(repoConfig);
-  }
-} catch {
-  projects = getFallbackProjects(repoConfig);
-}
+let projects: GitHubRepo[] = getFallbackProjects(repoConfig);
 ---
 
 <ConsoleLayout title="Projects" description="Open source projects and experiments">
@@ -44,7 +33,7 @@ try {
       const repoData = repoConfig.find((r) => r.name === project.name);
       const blogTag = repoData?.blogTag;
       const blogPostCount = blogTag ? (postsPerTag.get(blogTag) || 0) : 0;
-      
+
       return (
         <ProjectCard
           name={project.name}
