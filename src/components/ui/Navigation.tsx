@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import NavigationLogo from './NavigationLogo';
 
 interface NavigationProps {
@@ -17,23 +16,8 @@ function withBase(base: string, path: string): string {
   return `${b}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-const DEBOUNCE_MS = 300;
-
 export default function Navigation({ currentPath, basePath = '/' }: NavigationProps) {
-  const isNavigatingRef = useRef(false);
   const homeHref = withBase(basePath, '/');
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (isNavigatingRef.current) {
-      e.preventDefault();
-      return;
-    }
-    
-    isNavigatingRef.current = true;
-    setTimeout(() => {
-      isNavigatingRef.current = false;
-    }, DEBOUNCE_MS);
-  };
 
   const isActive = (href: string): boolean => {
     return currentPath === href || (href !== homeHref && currentPath.startsWith(href));
@@ -42,7 +26,7 @@ export default function Navigation({ currentPath, basePath = '/' }: NavigationPr
   return (
     <nav className="navigation" aria-label="Main navigation">
       <div className="nav-brand">
-        <a href={homeHref} className="brand-link" aria-label="Home" onClick={handleClick}>
+        <a href={homeHref} className="brand-link" aria-label="Home">
           <NavigationLogo />
         </a>
       </div>
@@ -57,7 +41,6 @@ export default function Navigation({ currentPath, basePath = '/' }: NavigationPr
                 className={`nav-link${isActive(href) ? ' active' : ''}`}
                 aria-current={currentPath === href ? 'page' : undefined}
                 title={title}
-                onClick={handleClick}
               >
                 {label}
               </a>
