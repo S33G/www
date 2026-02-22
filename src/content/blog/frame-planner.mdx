@@ -1,0 +1,67 @@
+---
+title: 'Frame Planner: over-engineering picture hanging'
+description: 'I built a 2D/3D wall planner because measuring with a tape and doing mental maths was annoying me.'
+pubDate: 2026-02-20
+tags: ['tools', 'react', 'threejs', 'frame-planner']
+---
+
+I bought new picture frames. Hanging them meant measuring, sketching on scrap paper, doing mental arithmetic about centre points and spacing, and then still getting it slightly wrong because I forgot to account for the hook offset.
+
+So I did what any reasonable person would do: I spent an evening getting an LLM to build me a full 2D/3D wall planner instead.
+
+- **Live tool:** [frames.s33g.uk](https://frames.s33g.uk)
+- **Source:** [github.com/S33G/frame-planner](https://github.com/S33G/frame-planner)
+
+## What it does
+
+- **2D canvas editor** — drag frames around a virtual wall, resize them, snap them into alignment
+- **3D preview** — switch to a Three.js perspective view to "check" the layout before touching a drill (I'm not convinced this is useful)
+- **Snap guides and spacing** — alignment helpers and even-spacing calculations between frames
+- **Frame customisation** — shape (rectangle/ellipse), colour, mat border, labels
+- **Drill hole overlay** — shows exact hanging points for installation
+- **Installation guide** — generates real-world measurements so you know where to put the nail
+- **Undo/redo** — full history, keyboard shortcuts
+- **Offline-first** — persists to IndexedDB, no account needed
+
+## Why it exists
+
+Because pen-and-paper layout planning is annoying in a specific, low-stakes way that makes it a perfect target for a quick tool.
+
+The maths isn't hard — it's just tedious. You measure the wall, measure each frame, work out the spacing, figure out where the centre line sits, calculate where the hanging hardware lands relative to the top edge, and then translate all of that into "put a nail here." Every time you change your mind about the arrangement, you redo the arithmetic.
+
+Frame Planner does the arithmetic for you. Drag things around until they look right, then read off the measurements.
+
+## The stack
+
+| Layer     | Tech                                  |
+| --------- | ------------------------------------- |
+| Framework | React 19 + Vite 7                     |
+| Language  | TypeScript 5 (strict)                 |
+| Styling   | Tailwind CSS 4                        |
+| 2D canvas | Konva / react-konva                   |
+| 3D        | Three.js / React Three Fiber + Drei   |
+| State     | Zustand + Zundo (undo/redo)           |
+| Storage   | idb-keyval (IndexedDB)                |
+| Testing   | Vitest + Testing Library + Playwright |
+
+It's a solid, modern stack. Zustand with Zundo for undo/redo is a neat pairing — you get time-travel state management with very little boilerplate.
+
+## Honest takes
+
+**Mobile is rough.** I explicitly told the model "mobile-first responsive design." It gave me a bottom sheet on mobile instead of the desktop sidebar, which is the right idea. But the canvas interaction on a small touch screen is fiddly at best. Dragging and resizing frames with touch on a small display is not the experience anyone wants. Desktop is where this tool actually works well. Mobile is "technically responsive" rather than "genuinely usable." (for now)
+
+**It's over-scoped for the problem.** A 3D preview for picture hanging? Elliptical frames? Mat borders? This is what happens when you let a model loose without tight non-goals. It built features I didn't ask for because they were adjacent and plausible. Some of them turned out useful (the drill hole overlay is great). Others are nice-to-have at best.
+
+**It worked for the actual job.** I used Frame Planner to lay out 3 frames across a wall in my home. The installation guide measurements were accurate, the snap guides made even spacing trivial, and I didn't have to redo any holes. For a tool that didn't exist 12 hours earlier, I'm happy with that.
+
+## What I learned
+
+The LLM-as-builder loop keeps getting more practical. The key is still the same as with GrooveLab: a clear spec prompt produces clean output, a vague one produces scope creep and weirdness.
+
+But the new insight for me here was speed-to-value on throwaway problems. Frame Planner might not be a tool I use every week. I might use it twice a year. That's fine — it cost me an evening, it solved a real problem, and it's there for next time.
+
+The barrier to building single-purpose tools has dropped to the point where "just deal with it manually" is no longer the obvious default. Sometimes the tool is worth building even if the problem is small.
+
+---
+
+Found an issue? Wanna PR a fix - [Find frame-planner on GitHub](https://github.com/s33g/frame-planner)
