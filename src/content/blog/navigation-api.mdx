@@ -18,7 +18,7 @@ The [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) 
 1. Click handlers on every `<a>` tag (or a global listener with delegation)
 2. `event.preventDefault()` on each one
 3. A manual `history.pushState()` call
-4. A [`popstate`](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listener for back/forward — which doesn't fire on `pushState`, only on browser-triggered navigation
+4. A [popstate](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listener for back/forward — which doesn't fire on `pushState`, only on browser-triggered navigation
 5. Manual DOM updates to reflect the new route
 6. Edge case handling for forms, `window.location`, hashes, and iframes
 
@@ -37,7 +37,7 @@ window.addEventListener('popstate', () => {
 });
 ```
 
-That's fragile, incomplete, and everywhere. It doesn't handle forms, programmatic navigation, or anything "in progress." The entire [`history`](https://www.npmjs.com/package/history) npm package (5M+ weekly downloads, used internally by React Router) exists solely to paper over these gaps.
+That's fragile, incomplete, and everywhere. It doesn't handle forms, programmatic navigation, or anything "in progress." The entire [history](https://www.npmjs.com/package/history) npm package (5M+ weekly downloads, used internally by React Router) exists solely to paper over these gaps.
 
 ## One event to handle everything
 
@@ -73,7 +73,7 @@ The things that matter here:
 
 ## Example: global link handler for a CMS
 
-This is the use case that makes it click. Say you have a blog or CMS where content has standard `<a href="/about">` links. With the History API you had two bad options: rewrite `<a>` into framework [`<Link>`](https://reactrouter.com/start/framework/navigating) components, or add a fragile global click listener.
+This is the use case that makes it click. Say you have a blog or CMS where content has standard `<a href="/about">` links. With the History API you had two bad options: rewrite `<a>` into framework [Link](https://reactrouter.com/start/framework/navigating) components, or add a fragile global click listener.
 
 With the Navigation API, one listener at the root handles every same-origin link on the page — framework components, server-rendered HTML, user-generated content. All of it.
 
@@ -94,7 +94,7 @@ Compare this with what [React Router](https://reactrouter.com) does internally: 
 
 ## Example: form submissions without reload
 
-The `navigate` event fires for form submissions too. If [`event.formData`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/formData) isn't `null`, it's a `POST`.
+The `navigate` event fires for form submissions too. If [event.formData](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/formData) isn't `null`, it's a `POST`.
 
 ```js
 navigation.addEventListener('navigate', (event) => {
@@ -113,11 +113,11 @@ navigation.addEventListener('navigate', (event) => {
 });
 ```
 
-No `onSubmit` handler. No `event.preventDefault()` on the form. A plain `<form action="/search" method="post">` is intercepted like any other navigation. This replaces patterns like Remix's [`<Form>` component](https://remix.run/docs/en/main/components/form) for simple cases — the browser handles the interception natively.
+No `onSubmit` handler. No `event.preventDefault()` on the form. A plain `<form action="/search" method="post">` is intercepted like any other navigation. This replaces patterns like Remix's [Form component](https://remix.run/docs/en/main/components/form) for simple cases — the browser handles the interception natively.
 
 ## Example: state that survives refresh
 
-`history.state` is coupled to the global history stack and shared across frames. The Navigation API gives each entry isolated state via [`getState()`](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/getState).
+`history.state` is coupled to the global history stack and shared across frames. The Navigation API gives each entry isolated state via [getState()](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/getState).
 
 ```js
 // Store UI state when navigating
@@ -150,11 +150,11 @@ What it replaces is the plumbing underneath:
 
 | What | Why it's redundant |
 |------|--------------------|
-| [`history`](https://www.npmjs.com/package/history) npm package | The browser handles the history stack natively now. This was the abstraction layer under React Router and most other routers. |
-| [`popstate`](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listeners | The `navigate` event covers back/forward, pushes, replaces — everything `popstate` did plus more. |
+| [history](https://www.npmjs.com/package/history) npm package | The browser handles the history stack natively now. This was the abstraction layer under React Router and most other routers. |
+| [popstate](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listeners | The `navigate` event covers back/forward, pushes, replaces — everything `popstate` did plus more. |
 | Custom `<Link>` components | Their core job was `preventDefault()` + `pushState()`. Standard `<a>` tags now work without wrappers. |
-| [`scrollRestoration`](https://developer.mozilla.org/en-US/docs/Web/API/History/scrollRestoration) hacks | `intercept()` gives you fine-grained scroll control with `event.scroll()` and automatic restoration. |
-| `useEffect`-based route watchers | `navigation.currentEntry` is a reliable source of truth. [`currententrychange`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/currententrychange_event) fires when it changes. |
+| [scrollRestoration](https://developer.mozilla.org/en-US/docs/Web/API/History/scrollRestoration) hacks | `intercept()` gives you fine-grained scroll control with `event.scroll()` and automatic restoration. |
+| `useEffect`-based route watchers | `navigation.currentEntry` is a reliable source of truth. [currententrychange](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/currententrychange_event) fires when it changes. |
 
 React Router's developers have [discussed adopting it internally](https://github.com/remix-run/react-router/discussions/14468). Angular is further along — the team has already built [internal primitives](https://github.com/angular/angular/tree/main/packages/core/primitives/dom-navigation) around it in `@angular/core`.
 
@@ -171,7 +171,7 @@ As of January 2026, the Navigation API hit [Baseline "Newly available"](https://
 
 Global coverage is around **80%**. That's real. This isn't experimental anymore.
 
-For older browsers, [`@virtualstate/navigation`](https://github.com/virtualstate/navigation) provides a polyfill covering the full API surface. A simple progressive enhancement pattern works:
+For older browsers, [@virtualstate/navigation](https://github.com/virtualstate/navigation) provides a polyfill covering the full API surface. A simple progressive enhancement pattern works:
 
 ```js
 if (window.navigation) {
