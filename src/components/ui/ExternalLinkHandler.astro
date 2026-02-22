@@ -1,0 +1,76 @@
+---
+// Zero-UI component — click delegation + astro:before-preparation interception
+---
+
+<script>
+  const STORAGE_KEY = 'external-link-no-confirm';
+  const EXCLUDED_PROTOCOLS = ['mailto:', 'tel:', 'sms:', 'javascript:'];
+
+  function isExternalLink(anchor: HTMLAnchorElement): boolean {
+    if (anchor.dataset.external === 'true') return true;
+
+    try {
+      const url = new URL(anchor.href, window.location.origin);
+
+      if (EXCLUDED_PROTOCOLS.some((p) => url.protocol === p)) return false;
+
+      return url.origin !== window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  function shouldSkipConfirmation(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  function dispatchExternalLinkEvent(url: string, triggerElement: HTMLElement | null) {
+    window.dispatchEvent(
+      new CustomEvent('external-link-clicked', {
+        detail: { url, triggerElement },
+      })
+    );
+  }
+
+  // Primary: click delegation (capture phase to beat other listeners)
+  document.addEventListener(
+    'click',
+    (e) => {
+      const anchor = (e.target as Element)?.closest?.('a') as HTMLAnchorElement | null;
+      if (!anchor) return;
+      if (!isExternalLink(anchor)) return;
+      if (shouldSkipConfirmation()) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      dispatchExternalLinkEvent(anchor.href, anchor);
+    },
+    { capture: true }
+  );
+
+  // Secondary: astro:before-preparation safety net
+  // Cross-origin links typically bypass Astro's router entirely,
+  // but this catches edge cases where the router processes them.
+  document.addEventListener('astro:before-preparation', ((event: Event) => {
+    const e = event as Event & { to: URL; preventDefault: () => void };
+    if (!e.to) return;
+
+    try {
+      const targetUrl = new URL(e.to.toString(), window.location.origin);
+
+      if (EXCLUDED_PROTOCOLS.some((p) => targetUrl.protocol === p)) return;
+      if (targetUrl.origin === window.location.origin) return;
+      if (shouldSkipConfirmation()) return;
+
+      e.preventDefault();
+      dispatchExternalLinkEvent(e.to.toString(), document.activeElement as HTMLElement);
+    } catch {
+      // Invalid URL — let it pass through
+    }
+  }) as EventListener);
+</script>

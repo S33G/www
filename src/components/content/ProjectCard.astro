@@ -1,5 +1,7 @@
 ---
 import { withBase } from '@/lib/utils';
+import { LuFileText } from 'react-icons/lu';
+import { SiGithub } from 'react-icons/si';
 
 interface Props {
   name: string;
@@ -27,29 +29,18 @@ const hasBlogTag = !!blogTag && blogPostCount > 0;
             aria-label={`View ${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''} about ${name}`}
             title={`${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''}`}
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path
-                fill="currentColor"
-                d="M8 3h7l5 5v13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm7 1.5V9h4.5L15 4.5zM9 12h8v1.5H9V12zm0 4h8v1.5H9V16zm0-8h5v1.5H9V8z"
-              />
-            </svg>
+            <LuFileText />
             <span class="post-count">{blogPostCount}</span>
           </a>
         )}
         <a
           href={url}
-          target="_blank"
-          rel="noopener noreferrer"
           class="project-github"
           aria-label={`Open ${name} on GitHub`}
           title="View GitHub repo"
+          data-external="true"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path
-              fill="currentColor"
-              d="M12 2C6.48 2 2 6.58 2 12.26c0 4.51 2.87 8.33 6.84 9.68.5.1.68-.22.68-.49 0-.24-.01-.88-.01-1.73-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.58 2.36 1.12 2.94.86.09-.67.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.04 1.03-2.76-.1-.26-.45-1.32.1-2.75 0 0 .85-.28 2.8 1.05A9.48 9.48 0 0 1 12 6.8c.85 0 1.71.12 2.5.35 1.95-1.33 2.8-1.05 2.8-1.05.55 1.43.2 2.49.1 2.75.64.72 1.03 1.64 1.03 2.76 0 3.95-2.34 4.82-4.57 5.08.36.32.68.95.68 1.92 0 1.39-.01 2.51-.01 2.85 0 .27.18.59.69.49 3.97-1.35 6.83-5.17 6.83-9.68C22 6.58 17.52 2 12 2z"
-            />
-          </svg>
+          <SiGithub />
         </a>
       </div>
     </header>
