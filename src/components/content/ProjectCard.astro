@@ -1,47 +1,55 @@
 ---
 import { withBase } from '@/lib/utils';
-import { LuFileText } from 'react-icons/lu';
+import { LuExternalLink, LuFileText } from 'react-icons/lu';
 import { SiGithub } from 'react-icons/si';
 
 interface Props {
   name: string;
   description: string | null;
   url: string;
+  homepage?: string | null;
   blogTag?: string;
   blogPostCount?: number;
   stars?: number;
   language?: string | null;
 }
 
-const { name, description, url, blogTag, blogPostCount = 0, stars = 0, language } = Astro.props;
+const { name, description, url, homepage, blogTag, blogPostCount = 0, stars = 0, language } = Astro.props;
 const hasBlogTag = !!blogTag && blogPostCount > 0;
+const cardHref = homepage || url;
 ---
 
-<article class="project-card">
+<a href={cardHref} class="project-card" data-external="true" aria-label={`Open ${name}`}>
   <div class="project-content">
     <header class="project-header">
       <h2 class="project-name">{name}</h2>
       <div class="project-actions">
         {hasBlogTag && (
-          <a
-            href={withBase(`/blog/tags/${blogTag}`)}
+          <span
             class="project-blog-tag"
-            aria-label={`View ${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''} about ${name}`}
+            aria-label={`${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''} about ${name}`}
             title={`${blogPostCount} blog post${blogPostCount !== 1 ? 's' : ''}`}
           >
             <LuFileText />
             <span class="post-count">{blogPostCount}</span>
-          </a>
+          </span>
         )}
-        <a
-          href={url}
+        {homepage && (
+          <span
+            class="project-link"
+            aria-label={`Live site`}
+            title="Live site"
+          >
+            <LuExternalLink />
+          </span>
+        )}
+        <span
           class="project-github"
-          aria-label={`Open ${name} on GitHub`}
-          title="View GitHub repo"
-          data-external="true"
+          aria-label={`GitHub`}
+          title="GitHub repo"
         >
           <SiGithub />
-        </a>
+        </span>
       </div>
     </header>
 
@@ -63,16 +71,20 @@ const hasBlogTag = !!blogTag && blogPostCount > 0;
       )}
     </footer>
   </div>
-</article>
+</a>
 
 
 <style>
   .project-card {
+    display: block;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     transition: all var(--transition-fast);
     background: var(--bg-primary);
     position: relative;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
   }
 
   .project-card:hover {
@@ -111,7 +123,8 @@ const hasBlogTag = !!blogTag && blogPostCount > 0;
   }
 
   .project-github,
-  .project-blog-tag {
+  .project-blog-tag,
+  .project-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -128,13 +141,15 @@ const hasBlogTag = !!blogTag && blogPostCount > 0;
   }
 
   .project-github svg,
-  .project-blog-tag svg {
+  .project-blog-tag svg,
+  .project-link svg {
     width: 16px;
     height: 16px;
   }
 
   .project-github:hover,
-  .project-blog-tag:hover {
+  .project-blog-tag:hover,
+  .project-link:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
     transform: translateY(-1px);
