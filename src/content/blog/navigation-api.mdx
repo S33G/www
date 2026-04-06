@@ -18,7 +18,7 @@ The [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) 
 1. Click handlers on every `<a>` tag (or a global listener with delegation)
 2. `event.preventDefault()` on each one
 3. A manual `history.pushState()` call
-4. A [`popstate`](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listener for back/forward — which doesn't fire on `pushState`, only on browser-triggered navigation
+4. A [popstate](https://developer.mozilla.org/en-US/docs/Web/API/Window/popstate_event) listener for back/forward — which doesn't fire on `pushState`, only on browser-triggered navigation
 5. Manual DOM updates to reflect the new route
 6. Edge case handling for forms, `window.location`, hashes, and iframes
 
@@ -37,7 +37,7 @@ window.addEventListener('popstate', () => {
 });
 ```
 
-That's fragile, incomplete, and everywhere. It doesn't handle forms, programmatic navigation, or anything "in progress." The entire [`history`](https://www.npmjs.com/package/history) npm package (5M+ weekly downloads, used internally by React Router) exists solely to paper over these gaps.
+That's fragile, incomplete, and everywhere. It doesn't handle forms, programmatic navigation, or anything "in progress." The entire [history](https://www.npmjs.com/package/history) npm package (5M+ weekly downloads, used internally by React Router) exists solely to paper over these gaps.
 
 ## One event to handle everything
 
@@ -71,7 +71,26 @@ The things that matter here:
 - **`event.canIntercept`** is `false` for cross-origin navigations. The API is honest about its boundaries.
 - **You never touch `<a>` tags.** No `preventDefault()`, no `<Link>` component wrappers, no delegation hacks. Standard HTML links just work.
 
-The same pattern handles CMS content, server-rendered HTML, and user-generated links. One listener at the root intercepts every same-origin navigation on the page.
+## Example: global link handler for a CMS
+
+This is the use case that makes it click. Say you have a blog or CMS where content has standard `<a href="/about">` links. With the History API you had two bad options: rewrite `<a>` into framework [Link](https://reactrouter.com/start/framework/navigating) components, or add a fragile global click listener.
+
+With the Navigation API, one listener at the root handles every same-origin link on the page — framework components, server-rendered HTML, user-generated content. All of it.
+
+```js
+navigation.addEventListener('navigate', (event) => {
+  if (!event.canIntercept || event.hashChange) return;
+
+  event.intercept({
+    async handler() {
+      const html = await fetchPage(event.destination.url);
+      document.querySelector('#content').innerHTML = html;
+    },
+  });
+});
+```
+
+Compare this with what [React Router](https://reactrouter.com) does internally: component wrappers, context providers, click interception, `popstate` listeners, scroll restoration logic. The Navigation API collapses most of that into browser-native behaviour.
 
 ## Example: form submissions without reload
 

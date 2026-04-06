@@ -4,6 +4,7 @@ import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import react from '@astrojs/react';
 import mermaid from 'astro-mermaid';
+import externalLinks from 'rehype-external-links';
 
 const previewBase = process.env.PREVIEW_BASE || undefined;
 
@@ -36,6 +37,17 @@ export default defineConfig({
     mdx({
       syntaxHighlight: 'shiki',
       shikiConfig: { theme: 'github-dark' },
+      rehypePlugins: [
+        [
+          externalLinks,
+          {
+            target: '_blank',
+            rel: ['nofollow', 'noopener', 'noreferrer'],
+            properties: { 'data-external': 'true' },
+            content: { type: 'text', value: ' 🔗' },
+          }
+        ],
+      ],
     }),
     sitemap(),
   ],

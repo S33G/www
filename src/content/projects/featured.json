@@ -61,6 +61,7 @@
       "featured": true,
       "description": "GrooveLab is a modern, musician-friendly toolbox for timing and theory work. Includes BPM tools, groove quantization, rhythm grids, chord and scale exploration.",
       "language": "TypeScript",
+      "homepage": "https://groovelab.s33g.uk",
       "blogTag": "groovelab"
     },
     {
@@ -69,6 +70,17 @@
       "featured": true,
       "description": "Go-based Discord bot with OpenAI-compatible LLM support, featuring RBAC, rate limiting, token counting, and Redis conversation storage.",
       "language": "Go"
+    },
+    {
+      "owner": "S33G",
+      "name": "macback",
+      "featured": true
+    },
+    {
+      "owner": "S33G",
+      "name": "frame-planner",
+      "featured": true,
+      "homepage": "https://frames.s33g.uk"
     }
   ]
 }

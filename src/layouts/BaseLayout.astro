@@ -6,6 +6,8 @@ import SkipLink from '@/components/ui/SkipLink.astro';
 import SEOHead from '@/components/ui/SEOHead.astro';
 import SettingsPanel from '@/components/ui/SettingsPanel';
 import AnimatedFavicon from '@/components/ui/AnimatedFavicon.astro';
+import ExternalLinkHandler from '@/components/ui/ExternalLinkHandler.astro';
+import ExternalLinkConfirmation from '@/components/ui/ExternalLinkConfirmation';
 
 interface Props {
   title: string;
@@ -59,6 +61,8 @@ const basePath = import.meta.env.BASE_URL.replace(/\/+$/, '') || '';
     <SkipLink />
     <slot />
     <SettingsPanel client:load />
+    <ExternalLinkHandler />
+    <ExternalLinkConfirmation client:load />
 
     <script>
       import { navigate } from 'astro:transitions/client';

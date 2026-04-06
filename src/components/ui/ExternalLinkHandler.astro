@@ -1,0 +1,118 @@
+---
+// Zero-UI component — intercepts external link navigations and shows a confirmation dialog.
+//
+// Strategy (layered):
+//   1. Navigation API  — catches same-tab external navigations (location.href, <a> without target)
+//   2. Click delegation — catches target="_blank" external links (Navigation API doesn't fire for new tabs)
+//   3. astro:before-preparation — safety net for edge cases where Astro's router processes cross-origin URLs
+---
+
+<script>
+  const STORAGE_KEY = 'external-link-no-confirm';
+  const EXCLUDED_PROTOCOLS = ['mailto:', 'tel:', 'sms:', 'javascript:'];
+
+  /** Check whether a URL string points to an external origin. */
+  function isExternalUrl(href: string): boolean {
+    try {
+      const url = new URL(href, window.location.origin);
+      if (EXCLUDED_PROTOCOLS.some((p) => url.protocol === p)) return false;
+      return url.origin !== window.location.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Check whether an anchor element is explicitly marked or resolves as external. */
+  function isExternalAnchor(anchor: HTMLAnchorElement): boolean {
+    if (anchor.dataset.external === 'true') return true;
+    return isExternalUrl(anchor.href);
+  }
+
+  function shouldSkipConfirmation(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  function dispatchExternalLinkEvent(url: string, triggerElement: HTMLElement | null): void {
+    window.dispatchEvent(
+      new CustomEvent('external-link-clicked', {
+        detail: { url, triggerElement },
+      })
+    );
+  }
+
+  // ─── Layer 1: Navigation API ────────────────────────────────────────
+  // Catches same-tab external navigations: location.href assignments,
+  // <a> clicks without target="_blank", form submissions, etc.
+  // Baseline 2026 — supported in all modern browsers.
+
+  const hasNavigationApi = typeof window !== 'undefined' && 'navigation' in window;
+
+  if (hasNavigationApi) {
+    window.navigation.addEventListener('navigate', (event: NavigateEvent) => {
+      // Skip non-user-initiated navigations (e.g. pushState from Astro's router)
+      if (!event.userInitiated) return;
+
+      // Skip hash-only navigations and downloads
+      if (event.hashChange || event.downloadRequest !== null) return;
+
+      const destinationUrl = event.destination.url;
+
+      if (!isExternalUrl(destinationUrl)) return;
+      if (shouldSkipConfirmation()) return;
+
+      // Cross-origin navigations have canIntercept=false, so we can't use
+      // intercept(). Instead, preventDefault() cancels the navigation entirely.
+      event.preventDefault();
+
+      // NavigateEvent doesn't expose the source element, so we use activeElement.
+      const trigger = document.activeElement as HTMLElement | null;
+      dispatchExternalLinkEvent(destinationUrl, trigger);
+    });
+  }
+
+  // ─── Layer 2: Click delegation ─────────────────────────────────────
+  // Catches target="_blank" external links — the Navigation API doesn't fire
+  // for these because the browser opens a new browsing context directly.
+  // Also serves as the sole handler when Navigation API is unavailable.
+  // Bubble phase — Astro's router (capture phase) sees the event first.
+
+  document.addEventListener('click', (e: MouseEvent) => {
+    const anchor = (e.target as Element)?.closest?.('a') as HTMLAnchorElement | null;
+    if (!anchor) return;
+    if (!isExternalAnchor(anchor)) return;
+    if (shouldSkipConfirmation()) return;
+
+    // When Navigation API is available, only handle target="_blank" links here.
+    // Same-tab external navigations are handled by Layer 1.
+    if (hasNavigationApi && anchor.target !== '_blank') return;
+
+    e.preventDefault();
+    dispatchExternalLinkEvent(anchor.href, anchor);
+  });
+
+  // ─── Layer 3: astro:before-preparation safety net ──────────────────
+  // Catches edge cases where Astro's router processes a cross-origin URL
+  // (e.g. prefetch-triggered navigations, programmatic navigate() calls).
+
+  document.addEventListener('astro:before-preparation', ((event: Event) => {
+    const e = event as Event & { to: URL; preventDefault: () => void };
+    if (!e.to) return;
+
+    try {
+      const targetUrl = new URL(e.to.toString(), window.location.origin);
+
+      if (EXCLUDED_PROTOCOLS.some((p) => targetUrl.protocol === p)) return;
+      if (targetUrl.origin === window.location.origin) return;
+      if (shouldSkipConfirmation()) return;
+
+      e.preventDefault();
+      dispatchExternalLinkEvent(e.to.toString(), document.activeElement as HTMLElement);
+    } catch {
+      // Invalid URL — let it pass through
+    }
+  }) as EventListener);
+</script>

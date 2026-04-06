@@ -1,5 +1,6 @@
 ---
 import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
+import { SiGithub, SiLinkedin } from 'react-icons/si';
 ---
 
 <ConsoleLayout title="About" description="Charlie (S33G) - Engineer & Tech Evangelist">
@@ -119,10 +120,12 @@ import ConsoleLayout from '@/layouts/ConsoleLayout.astro';
       <h2>Get in touch</h2>
       <p class="contact-copy">Website intentionally anonymous; happy to share specifics when we talk.</p>
       <div class="contact-links">
-        <a href="https://github.com/S33G" target="_blank" rel="noopener noreferrer">
+        <a href="https://github.com/S33G" data-external="true" title="GitHub">
+          <SiGithub size={18} />
           GitHub
         </a>
-        <a href="https://linkedin.com/in/s33g" target="_blank" rel="noopener noreferrer">
+        <a href="https://linkedin.com/in/s33g" data-external="true" title="LinkedIn">
+          <SiLinkedin size={18} />
           LinkedIn
         </a>
       </div>
