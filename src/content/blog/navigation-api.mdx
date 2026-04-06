@@ -11,7 +11,7 @@ The [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation
 
 ## Why the History API was always wrong for this
 
-The [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) wasn't designed for SPAs. Ian Hickson, the HTML spec editor, has [called `pushState()` one of his biggest mistakes](https://html5doctor.com/interview-with-ian-hickson-html-editor/).
+The [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) wasn't designed for SPAs. Ian Hickson, the HTML spec editor, has [called pushState() one of his biggest mistakes](https://html5doctor.com/interview-with-ian-hickson-html-editor/).
 
 `history.pushState()` doesn't navigate. It updates the URL and pushes a state entry. The browser has no idea anything happened — no loading indicator, no abort signal, no lifecycle hooks. To fake SPA routing on top of it, you needed:
 
@@ -113,7 +113,7 @@ navigation.addEventListener('navigate', (event) => {
 });
 ```
 
-No `onSubmit` handler. No `event.preventDefault()` on the form. A plain `<form action="/search" method="post">` is intercepted like any other navigation. This replaces patterns like Remix's [Form component](https://remix.run/docs/en/main/components/form) for simple cases — the browser handles the interception natively.
+The key detail: [`event.formData`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/formData) is `null` for link clicks and non-null for form submissions. That's how you route between GET and POST handling. A plain `<form action="/search" method="post">` gets intercepted like any other navigation — no wrappers, no manual `onSubmit` handlers.
 
 ## Example: state that survives refresh
 
@@ -139,8 +139,6 @@ navigation.updateCurrentEntry({
 ```
 
 This stores structured clone data — objects, arrays, dates. It's per-entry and persists across refreshes. You can inspect all entries via `navigation.entries()`, each with a URL, key, and state. The history stack is no longer opaque.
-
-This replaces the `sessionStorage` dance people do to survive refresh, and the `useEffect(() => { ... }, [location])` pattern for syncing state with URL changes.
 
 ## What it replaces (and what it doesn't)
 
@@ -199,6 +197,4 @@ The interesting thing here isn't any single method or event. It's the change in 
 
 With the History API, the browser was something you worked around. You suppressed its defaults, faked its navigations, and manually managed state it should have tracked. Every SPA router is fundamentally a workaround for the browser not understanding what your app is doing.
 
-The Navigation API inverts that. `event.intercept()` is a contract: "I'm handling this navigation." The browser responds with a loading indicator, an abort signal, a managed history entry, and the right events when you're done.
-
-The browser finally understands client-side routing. That's the whole point.
+The Navigation API inverts that. The browser finally understands client-side routing.
